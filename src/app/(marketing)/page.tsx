@@ -319,7 +319,7 @@ function PricingSection() {
           className="flex justify-center mb-10"
         >
           <div className="relative bg-white rounded-full p-1.5 shadow-lg border border-gray-200">
-            <div className="relative flex">
+            <div className="relative flex gap-1">
               {PLANS.map((p, i) => (
                 <button
                   key={p.id}
