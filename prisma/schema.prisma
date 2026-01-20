@@ -1,0 +1,299 @@
+// Schema-Driven Development (SDD)
+// Define your data models here first, then build your application around them.
+//
+// Workflow:
+// 1. Define/update models in this file
+// 2. Run `npm run db:push` to sync with database
+// 3. Run `npm run db:generate` to update Prisma client
+// 4. Build API routes and UI components based on the schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// AUTH MODELS
+// ============================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Onboarding
+  followerRange   FollowerRange?
+  goals           Goal[]
+  challenges      Challenge[]
+  onboardedAt     DateTime?
+
+  // Creator stats (weighted score where recent videos count more)
+  overallScore    Int          @default(0)  // 0-100, weighted average
+  title           CreatorTitle @default(NEWBIE)
+  videosAnalyzed  Int          @default(0)
+
+  // Subscription
+  subscription      SubscriptionTier @default(FREE)
+  stripeCustomerId  String?          @unique
+  stripeSubId       String?          @unique
+  subExpiresAt      DateTime?
+  analysesThisMonth Int              @default(0)
+  analysesResetAt   DateTime?
+
+  // Affiliate Program
+  referralCode      String?   @unique  // e.g., "JOHN50"
+  referredBy        String?             // referralCode of who referred them
+  referredByUser    User?     @relation("Referrals", fields: [referredBy], references: [referralCode])
+  referrals         User[]    @relation("Referrals")
+  affiliateEarnings Float     @default(0)  // Total earned
+  affiliatePending  Float     @default(0)  // Pending payout
+
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  videos            Video[]
+  affiliatePayments AffiliatePayment[] @relation("AffiliateEarnings")
+  referredPayments  AffiliatePayment[] @relation("ReferredPayments")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ============================================================================
+// APPLICATION MODELS
+// ============================================================================
+
+model Video {
+  id          String      @id @default(cuid())
+  title       String?
+  description String?     @db.Text
+  platform    Platform    @default(TIKTOK)
+
+  // File info
+  fileUrl     String      // S3 or storage URL
+  fileName    String
+  fileSize    Int         // bytes
+  duration    Int?        // seconds
+  thumbnailUrl String?
+
+  // Processing
+  status      VideoStatus @default(PENDING)
+
+  // Metadata
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  analysis    Analysis?
+}
+
+model Analysis {
+  id          String       @id @default(cuid())
+  videoId     String       @unique
+  video       Video        @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  mode        AnalysisMode @default(VIRAL)
+
+  // Overall viral score (0-100)
+  viralScore       Int
+
+  // Section scores (0-100)
+  hookScore        Int      // Opening/first few seconds
+  bodyScore        Int      // Middle content
+  endingScore      Int      // Conclusion/CTA
+
+  // Predicted performance
+  viewsMin         Int?     // Expected views range (low)
+  viewsMax         Int?     // Expected views range (high)
+  brandValue       Float?   // Potential brand deal value ($)
+
+  // AI-generated feedback
+  hookFeedback     String   @db.Text
+  bodyFeedback     String   @db.Text
+  endingFeedback   String   @db.Text
+  summary          String   @db.Text
+
+  // Transcript (if applicable)
+  transcript       String?  @db.Text
+
+  // Raw AI response for debugging
+  rawResponse      Json?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  suggestions      Suggestion[]
+}
+
+model Suggestion {
+  id          String           @id @default(cuid())
+  analysisId  String
+  analysis    Analysis         @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  category    SuggestionCategory
+  priority    Priority         @default(MEDIUM)
+  title       String
+  description String           @db.Text
+
+  // Optional: timestamp in video this applies to
+  timestamp   Int?             // seconds into video
+
+  // Track if user has addressed this
+  dismissed   Boolean          @default(false)
+
+  createdAt   DateTime         @default(now())
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum Platform {
+  TIKTOK
+  INSTAGRAM_REELS
+  YOUTUBE_SHORTS
+  YOUTUBE
+  OTHER
+}
+
+enum VideoStatus {
+  PENDING      // Uploaded, waiting for analysis
+  PROCESSING   // AI analysis in progress
+  COMPLETED    // Analysis done
+  FAILED       // Analysis failed
+}
+
+enum AnalysisMode {
+  VIRAL        // General viral content
+  UGC          // User-generated content style
+  TIKTOK_SHOP  // TikTok Shop / product content
+}
+
+enum SuggestionCategory {
+  HOOK         // Opening/first 3 seconds
+  AUDIO        // Music, sound effects, voiceover
+  VISUAL       // Lighting, framing, effects
+  PACING       // Editing speed, transitions
+  CONTENT      // Topic, storytelling, structure
+  TEXT         // Captions, on-screen text
+  CTA          // Call-to-action, engagement hooks
+  TRENDING     // Hashtags, sounds, challenges
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CreatorTitle {
+  NEWBIE       // 0-19:  Just starting out
+  CREATOR      // 20-39: Learning the craft
+  RISING_STAR  // 40-59: Getting traction
+  INFLUENCER   // 60-79: Building audience
+  VIRAL_LEGEND // 80-100: Mastered virality
+}
+
+enum FollowerRange {
+  UNDER_1K     // < 1,000
+  FROM_1K_10K  // 1,000 - 10,000
+  FROM_10K_50K // 10,000 - 50,000
+  FROM_50K_100K // 50,000 - 100,000
+  OVER_100K    // 100,000+
+}
+
+enum Goal {
+  GROW         // Grow my audience
+  MONETIZE     // Make money from content
+  BRAND_DEALS  // Land brand deals
+  GO_VIRAL     // Go viral
+}
+
+enum Challenge {
+  NO_VIEWS           // Videos don't get views
+  DONT_KNOW          // I don't know what's wrong
+  HOOKS_NOT_WORKING  // Hooks aren't working
+  INCONSISTENT       // Inconsistent results
+}
+
+enum SubscriptionTier {
+  FREE       // 3 analyses/month
+  PRO        // 30 analyses/month - $9/mo
+  UNLIMITED  // Unlimited - $29/mo
+}
+
+enum PayoutStatus {
+  PENDING    // Not yet paid out
+  PAID       // Paid to affiliate
+  FAILED     // Payout failed
+}
+
+// ============================================================================
+// AFFILIATE MODELS
+// ============================================================================
+
+model AffiliatePayment {
+  id              String       @id @default(cuid())
+
+  // Who earned it
+  affiliateId     String
+  affiliate       User         @relation("AffiliateEarnings", fields: [affiliateId], references: [id])
+
+  // Source
+  referredUserId  String
+  referredUser    User         @relation("ReferredPayments", fields: [referredUserId], references: [id])
+
+  // Payment details
+  originalAmount  Float        // What the user paid
+  commission      Float        // 50% to affiliate
+  stripePaymentId String
+
+  // Status
+  status          PayoutStatus @default(PENDING)
+  paidAt          DateTime?
+
+  createdAt       DateTime     @default(now())
+}
