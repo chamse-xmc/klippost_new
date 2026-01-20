@@ -29,9 +29,7 @@ export async function GET(
             userId: true,
           },
         },
-        suggestions: {
-          orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
-        },
+        suggestions: true,
       },
     });
 
@@ -43,7 +41,24 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    return NextResponse.json(analysis);
+    // Sort suggestions by priority (CRITICAL > HIGH > MEDIUM > LOW)
+    const priorityOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+    const sortedSuggestions = [...analysis.suggestions].sort(
+      (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+    );
+
+    return NextResponse.json({
+      ...analysis,
+      suggestions: sortedSuggestions.map((s) => ({
+        id: s.id,
+        suggestion: s.description,
+        description: s.description,
+        priority: s.priority,
+        title: s.title,
+        category: s.category,
+        timestamp: s.timestamp,
+      })),
+    });
   } catch (error) {
     console.error("Get analysis error:", error);
     return NextResponse.json(

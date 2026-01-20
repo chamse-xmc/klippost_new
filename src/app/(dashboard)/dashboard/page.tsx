@@ -188,6 +188,74 @@ interface GoalAdvice {
   actionItems: string[];
 }
 
+interface RetentionDropoff {
+  timestamp: number;
+  reason: string;
+}
+
+interface Suggestion {
+  id: string;
+  title: string;
+  suggestion?: string;
+  description?: string;
+  priority: string;
+  category: string;
+  timestamp?: number | null;
+}
+
+interface AnalysisData {
+  id: string;
+  viralScore: number;
+  hookScore: number;
+  bodyScore: number;
+  endingScore: number;
+  expectedViewsMin?: number;
+  expectedViewsMax?: number;
+  viewsMin?: number;
+  viewsMax?: number;
+  summary?: string;
+  hookFeedback?: string;
+  bodyFeedback?: string;
+  endingFeedback?: string;
+  transcript?: string;
+  goalAdvice?: GoalAdvice[];
+  suggestions?: Suggestion[];
+
+  // Hook analysis
+  hookType?: string;
+
+  // Retention
+  retentionScore?: number;
+  retentionDropoffs?: RetentionDropoff[];
+
+  // CTA
+  ctaType?: string;
+  ctaStrength?: number;
+  ctaFeedback?: string;
+
+  // Trends
+  trendScore?: number;
+  trendMatches?: string[];
+  trendSuggestions?: string[];
+
+  // Engagement predictions
+  estimatedLikesMin?: number;
+  estimatedLikesMax?: number;
+  estimatedCommentsMin?: number;
+  estimatedCommentsMax?: number;
+  estimatedSharesMin?: number;
+  estimatedSharesMax?: number;
+
+  // Technical quality
+  audioScore?: number;
+  visualScore?: number;
+  audioFeedback?: string;
+  visualFeedback?: string;
+
+  // Brand value
+  brandValue?: number;
+}
+
 interface VideoData {
   id: string;
   title: string | null;
@@ -195,28 +263,71 @@ interface VideoData {
   platform: string;
   thumbnailUrl: string | null;
   createdAt: string;
-  analysis: {
-    id: string;
-    viralScore: number;
-    hookScore: number;
-    bodyScore: number;
-    endingScore: number;
-    expectedViewsMin?: number;
-    expectedViewsMax?: number;
-    viewsMin?: number;
-    viewsMax?: number;
-    summary?: string;
-    hookFeedback?: string;
-    bodyFeedback?: string;
-    endingFeedback?: string;
-    goalAdvice?: GoalAdvice[];
-    suggestions?: { id: string; suggestion?: string; description?: string; priority: number | string }[];
-  } | null;
+  analysis: AnalysisData | null;
 }
 
 interface AnalysisResult {
-  analysis: VideoData["analysis"];
+  analysis: AnalysisData;
   video: VideoData;
+}
+
+// Priority badge colors
+const priorityColors: Record<string, { bg: string; text: string; border: string }> = {
+  CRITICAL: { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30" },
+  HIGH: { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/30" },
+  MEDIUM: { bg: "bg-yellow-500/10", text: "text-yellow-500", border: "border-yellow-500/30" },
+  LOW: { bg: "bg-gray-500/10", text: "text-gray-400", border: "border-gray-500/30" },
+};
+
+// Category icons and labels
+const categoryConfig: Record<string, { icon: string; label: string; color: string }> = {
+  HOOK: { icon: "🎣", label: "Hook", color: "text-purple-400" },
+  AUDIO: { icon: "🎵", label: "Audio", color: "text-blue-400" },
+  VISUAL: { icon: "🎨", label: "Visual", color: "text-pink-400" },
+  PACING: { icon: "⚡", label: "Pacing", color: "text-yellow-400" },
+  CONTENT: { icon: "📝", label: "Content", color: "text-green-400" },
+  TEXT: { icon: "💬", label: "Text", color: "text-cyan-400" },
+  CTA: { icon: "👆", label: "CTA", color: "text-orange-400" },
+  TRENDING: { icon: "📈", label: "Trending", color: "text-red-400" },
+};
+
+// Hook type labels
+const hookTypeLabels: Record<string, { label: string; description: string }> = {
+  CURIOSITY_GAP: { label: "Curiosity Gap", description: "Makes viewers need to know more" },
+  PATTERN_INTERRUPT: { label: "Pattern Interrupt", description: "Unexpected element grabs attention" },
+  SHOCK_VALUE: { label: "Shock Value", description: "Surprising or controversial opening" },
+  EMOTIONAL: { label: "Emotional", description: "Triggers strong feeling immediately" },
+  QUESTION: { label: "Question", description: "Poses a compelling question" },
+};
+
+// CTA type labels
+const ctaTypeLabels: Record<string, string> = {
+  FOLLOW: "Follow CTA",
+  COMMENT: "Comment CTA",
+  SHARE: "Share CTA",
+  LINK: "Link CTA",
+  NONE: "No CTA",
+};
+
+// Format timestamp as "at X:XX"
+function formatTimestamp(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `at ${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// Improvement stats interface
+interface ImprovementStats {
+  firstScore: number;
+  latestAvg: number;
+  improvementPercent: number;
+  trend: "improving" | "declining" | "stable";
+  totalVideos: number;
+  areaBreakdown: {
+    hook: { first: number; latest: number; change: number };
+    body: { first: number; latest: number; change: number };
+    ending: { first: number; latest: number; change: number };
+  };
 }
 
 // Mock videos for testing score colors
@@ -334,7 +445,7 @@ export default function DashboardPage() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showLockedResults, setShowLockedResults] = useState(false);
 
-  const { data: videosData, isLoading: videosLoading } = useQuery<{ videos: VideoData[] }>({
+  const { data: videosData, isLoading: videosLoading } = useQuery<{ videos: VideoData[]; improvementStats: ImprovementStats | null }>({
     queryKey: ["videos"],
     queryFn: async () => {
       const res = await fetch("/api/videos?limit=20");
@@ -665,10 +776,11 @@ export default function DashboardPage() {
       {/* Full screen confetti celebration */}
       <ConfettiCelebration show={showCelebration} />
 
-      {/* Creator Rank Badge */}
+      {/* Stats Badges Row */}
       {!selectedFile && (
-        <div className="flex justify-center py-4">
-          <div className="relative group">
+        <div className="flex gap-4">
+          {/* Creator Rank Badge */}
+          <div className={cn("relative group flex-1", !videosData?.improvementStats && "flex-none mx-auto")}>
             {/* Outer glow ring */}
             <div
               className="absolute inset-0 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
@@ -684,11 +796,11 @@ export default function DashboardPage() {
             />
 
             {/* Main badge container */}
-            <div className="relative flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
+            <div className="relative h-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
               {/* Score circle */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 {/* Progress ring SVG */}
-                <svg className="w-20 h-20 rotate-90" viewBox="0 0 100 100">
+                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
                   {/* Background circle */}
                   <circle
                     cx="50"
@@ -763,6 +875,96 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Improvement Stats Badge */}
+          {videosData?.improvementStats && (
+            <div className="relative group flex-1">
+              {/* Outer glow ring */}
+              <div
+                className="absolute inset-0 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
+                style={{
+                  background: videosData.improvementStats.improvementPercent >= 0
+                    ? 'linear-gradient(135deg, #22c55e, #10b981)'
+                    : 'linear-gradient(135deg, #ef4444, #f97316)',
+                }}
+              />
+
+              {/* Main badge container */}
+              <div className="relative h-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
+                {/* Progress circle */}
+                <div className="relative shrink-0">
+                  {/* Progress ring SVG */}
+                  <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                    {/* Background circle */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="6"
+                      className="text-muted/30"
+                    />
+                    {/* Progress circle - show improvement as progress (capped at 100) */}
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="42"
+                      fill="none"
+                      stroke="url(#progressGradient)"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                      strokeDasharray={`${Math.min(Math.abs(videosData.improvementStats.improvementPercent), 100) * 2.64} 264`}
+                      className="transition-all duration-1000 ease-out"
+                    />
+                    <defs>
+                      <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        {videosData.improvementStats.improvementPercent >= 0 ? (
+                          <>
+                            <stop offset="0%" stopColor="#22c55e" />
+                            <stop offset="100%" stopColor="#10b981" />
+                          </>
+                        ) : (
+                          <>
+                            <stop offset="0%" stopColor="#ef4444" />
+                            <stop offset="100%" stopColor="#f97316" />
+                          </>
+                        )}
+                      </linearGradient>
+                    </defs>
+                  </svg>
+
+                  {/* Percentage in center */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span
+                      className={cn(
+                        "text-2xl font-black",
+                        videosData.improvementStats.improvementPercent >= 0 ? "text-green-500" : "text-red-500"
+                      )}
+                      style={{ fontFamily: "var(--font-nunito)", fontVariantNumeric: "tabular-nums" }}
+                    >
+                      {videosData.improvementStats.improvementPercent >= 0 ? "+" : ""}
+                      {videosData.improvementStats.improvementPercent}%
+                    </span>
+                  </div>
+                </div>
+
+                {/* Title and label */}
+                <div className="flex flex-col">
+                  <span
+                    className="text-lg font-bold text-foreground tracking-tight"
+                    style={{ fontFamily: "var(--font-nunito)" }}
+                  >
+                    {videosData.improvementStats.trend === "improving" ? "Improving" :
+                     videosData.improvementStats.trend === "declining" ? "Declining" : "Stable"}
+                  </span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                    your progress
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -999,7 +1201,7 @@ export default function DashboardPage() {
           {analysisResult.analysis.suggestions && analysisResult.analysis.suggestions.length > 0 && (
             <div className="rounded-2xl bg-card border border-border overflow-hidden">
               <div className="p-4 border-b border-border">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Quick Wins</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggestions</h4>
               </div>
               <div className="p-4 space-y-2">
                 {analysisResult.analysis.suggestions.map((s, i) => (
@@ -1010,6 +1212,201 @@ export default function DashboardPage() {
                     <span className="text-sm text-foreground">{s.suggestion || s.description}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Hook Type Analysis */}
+          {analysisResult.analysis.hookType && (
+            <div className="rounded-2xl bg-card border border-border p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Hook Type</h4>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-400 font-medium text-sm">
+                  {hookTypeLabels[analysisResult.analysis.hookType]?.label || analysisResult.analysis.hookType}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {hookTypeLabels[analysisResult.analysis.hookType]?.description}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Retention Timeline */}
+          {analysisResult.analysis.retentionScore != null && (
+            <div className="rounded-2xl bg-card border border-border overflow-hidden">
+              <div className="p-4 border-b border-border flex items-center justify-between">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Retention</h4>
+                <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                  {analysisResult.analysis.retentionScore}
+                </span>
+              </div>
+              {analysisResult.analysis.retentionDropoffs && analysisResult.analysis.retentionDropoffs.length > 0 && (
+                <div className="p-4 space-y-2">
+                  <p className="text-xs text-muted-foreground mb-2">Predicted drop-off points:</p>
+                  {analysisResult.analysis.retentionDropoffs.map((dropoff, i) => (
+                    <div key={i} className="flex items-start gap-2 text-sm">
+                      <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-mono text-xs">
+                        {formatTimestamp(dropoff.timestamp)}
+                      </span>
+                      <span className="text-muted-foreground">{dropoff.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* CTA Analysis */}
+          {(analysisResult.analysis.ctaType || analysisResult.analysis.ctaStrength != null) && (
+            <div className="rounded-2xl bg-card border border-border p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Call to Action</h4>
+              <div className="flex items-center gap-4 mb-2">
+                {analysisResult.analysis.ctaType && (
+                  <span className="px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-medium text-sm">
+                    {ctaTypeLabels[analysisResult.analysis.ctaType] || analysisResult.analysis.ctaType}
+                  </span>
+                )}
+                {analysisResult.analysis.ctaStrength != null && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Strength:</span>
+                    <span className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                      {analysisResult.analysis.ctaStrength}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {analysisResult.analysis.ctaFeedback && (
+                <p className="text-sm text-muted-foreground">{analysisResult.analysis.ctaFeedback}</p>
+              )}
+            </div>
+          )}
+
+          {/* Trend Alignment */}
+          {analysisResult.analysis.trendScore != null && (
+            <div className="rounded-2xl bg-card border border-border p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trend Alignment</h4>
+                <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                  {analysisResult.analysis.trendScore}
+                </span>
+              </div>
+              {analysisResult.analysis.trendMatches && analysisResult.analysis.trendMatches.length > 0 && (
+                <div className="mb-2">
+                  <span className="text-xs text-muted-foreground">Matching trends:</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {analysisResult.analysis.trendMatches.map((trend, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-xs">
+                        {trend}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {analysisResult.analysis.trendSuggestions && analysisResult.analysis.trendSuggestions.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground">Try these trends:</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {analysisResult.analysis.trendSuggestions.map((trend, i) => (
+                      <span key={i} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs">
+                        {trend}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Engagement Predictions */}
+          {(analysisResult.analysis.estimatedLikesMin != null || analysisResult.analysis.estimatedCommentsMin != null || analysisResult.analysis.estimatedSharesMin != null) && (
+            <div className="rounded-2xl bg-card border border-border p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement Forecast</h4>
+              <div className="grid grid-cols-3 gap-4">
+                {analysisResult.analysis.estimatedLikesMin != null && (
+                  <div className="text-center">
+                    <div className="text-2xl mb-1">❤️</div>
+                    <div className="text-sm font-semibold text-foreground">
+                      {analysisResult.analysis.estimatedLikesMin.toLocaleString()}-{(analysisResult.analysis.estimatedLikesMax || 0).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Likes</div>
+                  </div>
+                )}
+                {analysisResult.analysis.estimatedCommentsMin != null && (
+                  <div className="text-center">
+                    <div className="text-2xl mb-1">💬</div>
+                    <div className="text-sm font-semibold text-foreground">
+                      {analysisResult.analysis.estimatedCommentsMin.toLocaleString()}-{(analysisResult.analysis.estimatedCommentsMax || 0).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Comments</div>
+                  </div>
+                )}
+                {analysisResult.analysis.estimatedSharesMin != null && (
+                  <div className="text-center">
+                    <div className="text-2xl mb-1">🔄</div>
+                    <div className="text-sm font-semibold text-foreground">
+                      {analysisResult.analysis.estimatedSharesMin.toLocaleString()}-{(analysisResult.analysis.estimatedSharesMax || 0).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Shares</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Technical Quality */}
+          {(analysisResult.analysis.audioScore != null || analysisResult.analysis.visualScore != null) && (
+            <div className="rounded-2xl bg-card border border-border overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Technical Quality</h4>
+              </div>
+              <div className="divide-y divide-border">
+                {analysisResult.analysis.audioScore != null && (
+                  <div className="flex items-stretch">
+                    <div className="flex-1 p-4">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="font-semibold text-foreground">🎵 Audio</span>
+                      </div>
+                      {analysisResult.analysis.audioFeedback && (
+                        <p className="text-sm text-muted-foreground">{analysisResult.analysis.audioFeedback}</p>
+                      )}
+                    </div>
+                    <div className="w-20 flex items-center justify-center bg-muted/50">
+                      <span className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                        {analysisResult.analysis.audioScore}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {analysisResult.analysis.visualScore != null && (
+                  <div className="flex items-stretch">
+                    <div className="flex-1 p-4">
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="font-semibold text-foreground">🎨 Visual</span>
+                      </div>
+                      {analysisResult.analysis.visualFeedback && (
+                        <p className="text-sm text-muted-foreground">{analysisResult.analysis.visualFeedback}</p>
+                      )}
+                    </div>
+                    <div className="w-20 flex items-center justify-center bg-muted/50">
+                      <span className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                        {analysisResult.analysis.visualScore}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Brand Value */}
+          {analysisResult.analysis.brandValue != null && (
+            <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4">
+              <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">Estimated Brand Value</h4>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-black text-amber-400" style={{ fontFamily: "var(--font-nunito)" }}>
+                  ${analysisResult.analysis.brandValue}
+                </span>
+                <span className="text-sm text-muted-foreground">per sponsored post</span>
               </div>
             </div>
           )}

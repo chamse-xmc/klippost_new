@@ -8,6 +8,11 @@ import os from "os";
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || "");
 const fileManager = new GoogleAIFileManager(process.env.GOOGLE_AI_API_KEY || "");
 
+export interface RetentionDropoff {
+  timestamp: number;
+  reason: string;
+}
+
 export interface AnalysisResult {
   viralScore: number;
   hookScore: number;
@@ -32,6 +37,40 @@ export interface AnalysisResult {
     timestamp?: number;
   }[];
   transcript?: string;
+
+  // Hook analysis
+  hookType?: string; // CURIOSITY_GAP, PATTERN_INTERRUPT, SHOCK_VALUE, EMOTIONAL, QUESTION
+
+  // Retention
+  retentionScore?: number;
+  retentionDropoffs?: RetentionDropoff[];
+
+  // CTA
+  ctaType?: string; // FOLLOW, COMMENT, SHARE, LINK, NONE
+  ctaStrength?: number;
+  ctaFeedback?: string;
+
+  // Trends
+  trendScore?: number;
+  trendMatches?: string[];
+  trendSuggestions?: string[];
+
+  // Engagement predictions
+  estimatedLikesMin?: number;
+  estimatedLikesMax?: number;
+  estimatedCommentsMin?: number;
+  estimatedCommentsMax?: number;
+  estimatedSharesMin?: number;
+  estimatedSharesMax?: number;
+
+  // Technical quality
+  audioScore?: number;
+  visualScore?: number;
+  audioFeedback?: string;
+  visualFeedback?: string;
+
+  // Brand value
+  brandValue?: number;
 }
 
 const platformNames: Record<Platform, string> = {
@@ -98,21 +137,31 @@ function buildGoalJsonSection(goals: Goal[]): string {
 function buildPrompt(platform: Platform, mode: AnalysisMode, goals: Goal[]): string {
   const goalSection = buildGoalPromptSection(goals);
   const goalJsonSection = buildGoalJsonSection(goals);
+  const hasBrandGoal = goals.includes("BRAND_DEALS" as Goal);
 
   return `You are an expert social media content analyst. Analyze this video for viral potential on ${platformNames[platform]}.
 
 The video should be optimized for ${modeDescriptions[mode]}.
 ${goalSection}
 
-Analyze and score each section from 0-100:
+## Analysis Areas
 
-1. HOOK (first 3 seconds): Does it grab attention immediately? Is there a pattern interrupt? Does it create curiosity?
+1. **HOOK (first 3 seconds)**: Does it grab attention immediately? What hook technique is used?
+   - Hook Types: CURIOSITY_GAP (makes viewer need to know more), PATTERN_INTERRUPT (unexpected element), SHOCK_VALUE (surprising/controversial), EMOTIONAL (triggers strong feeling), QUESTION (poses compelling question)
 
-2. BODY (middle content): Is it engaging throughout? Good pacing? Clear value delivery? Does it hold attention?
+2. **BODY (middle content)**: Is it engaging throughout? Good pacing? Where might viewers drop off?
 
-3. ENDING (conclusion): Strong call-to-action? Creates desire for more? Encourages engagement (likes, comments, shares)?
+3. **ENDING & CTA**: Strong call-to-action? What type of CTA?
+   - CTA Types: FOLLOW, COMMENT, SHARE, LINK, NONE
 
-Based on the content quality, estimate expected views range.
+4. **RETENTION**: Score how well the video holds attention. Identify specific timestamps where viewers might drop off.
+
+5. **TREND ALIGNMENT**: How well does this content align with current ${platformNames[platform]} trends?
+
+6. **ENGAGEMENT POTENTIAL**: Predict likes, comments, and shares based on content type and quality.
+
+7. **TECHNICAL QUALITY**: Evaluate audio (clarity, music, sound effects) and visual (lighting, framing, effects) separately.
+${hasBrandGoal ? "\n8. **BRAND VALUE**: Estimate potential brand deal value ($50-500 range) based on content quality, niche, and professionalism." : ""}
 
 Provide your analysis in the following JSON format only, no other text:
 {
@@ -133,13 +182,42 @@ Provide your analysis in the following JSON format only, no other text:
       "priority": "<LOW|MEDIUM|HIGH|CRITICAL>",
       "title": "<short actionable title>",
       "description": "<specific, actionable improvement tip - 1-2 sentences>",
-      "timestamp": <optional: seconds into video this applies to>
+      "timestamp": <optional: seconds into video this applies to, null if not applicable>
     }
   ],
-  "transcript": "<brief transcript or description of what's said/shown>"
+  "transcript": "<brief transcript or description of what's said/shown in the video>",
+
+  "hookType": "<CURIOSITY_GAP|PATTERN_INTERRUPT|SHOCK_VALUE|EMOTIONAL|QUESTION>",
+
+  "retentionScore": <0-100, how well the video holds attention>,
+  "retentionDropoffs": [
+    { "timestamp": <seconds>, "reason": "<why viewers might leave here>" }
+  ],
+
+  "ctaType": "<FOLLOW|COMMENT|SHARE|LINK|NONE>",
+  "ctaStrength": <0-100>,
+  "ctaFeedback": "<specific feedback on the CTA effectiveness>",
+
+  "trendScore": <0-100, alignment with current trends>,
+  "trendMatches": ["<trend1>", "<trend2>"],
+  "trendSuggestions": ["<trending format/sound/style to try>"],
+
+  "estimatedLikesMin": <minimum expected likes>,
+  "estimatedLikesMax": <maximum expected likes>,
+  "estimatedCommentsMin": <minimum expected comments>,
+  "estimatedCommentsMax": <maximum expected comments>,
+  "estimatedSharesMin": <minimum expected shares>,
+  "estimatedSharesMax": <maximum expected shares>,
+
+  "audioScore": <0-100>,
+  "visualScore": <0-100>,
+  "audioFeedback": "<specific feedback on audio quality, music choice, voice clarity>",
+  "visualFeedback": "<specific feedback on lighting, framing, visual effects>"${hasBrandGoal ? `,
+
+  "brandValue": <50-500, estimated brand deal value in dollars>` : ""}
 }
 
-Provide 3-5 actionable suggestions prioritized by impact.`;
+Provide 4-6 actionable suggestions prioritized by impact. Be specific with timestamps where applicable.`;
 }
 
 function parseResult(text: string): AnalysisResult {
@@ -151,15 +229,42 @@ function parseResult(text: string): AnalysisResult {
 
   const result = JSON.parse(jsonMatch[0]) as AnalysisResult;
 
-  // Validate and clamp scores
+  // Helper to clamp scores
+  const clampScore = (score: number | undefined): number | undefined => {
+    if (score === undefined || score === null) return undefined;
+    return Math.max(0, Math.min(100, score));
+  };
+
+  // Validate and clamp main scores
   result.viralScore = Math.max(0, Math.min(100, result.viralScore));
   result.hookScore = Math.max(0, Math.min(100, result.hookScore));
   result.bodyScore = Math.max(0, Math.min(100, result.bodyScore));
   result.endingScore = Math.max(0, Math.min(100, result.endingScore));
 
-  // Ensure goalAdvice exists
+  // Clamp new scores
+  result.retentionScore = clampScore(result.retentionScore);
+  result.ctaStrength = clampScore(result.ctaStrength);
+  result.trendScore = clampScore(result.trendScore);
+  result.audioScore = clampScore(result.audioScore);
+  result.visualScore = clampScore(result.visualScore);
+
+  // Clamp brand value to $50-500 range
+  if (result.brandValue !== undefined && result.brandValue !== null) {
+    result.brandValue = Math.max(50, Math.min(500, result.brandValue));
+  }
+
+  // Ensure arrays exist
   if (!result.goalAdvice) {
     result.goalAdvice = [];
+  }
+  if (!result.retentionDropoffs) {
+    result.retentionDropoffs = [];
+  }
+  if (!result.trendMatches) {
+    result.trendMatches = [];
+  }
+  if (!result.trendSuggestions) {
+    result.trendSuggestions = [];
   }
 
   return result;

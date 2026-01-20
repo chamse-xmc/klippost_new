@@ -66,9 +66,16 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (referrer && referrer.id !== user.id) {
+            // Update new user with referral info
             await db.user.update({
               where: { id: user.id },
               data: { referredBy: referralCode },
+            });
+
+            // Grant +5 bonus analyses to the referrer
+            await db.user.update({
+              where: { id: referrer.id },
+              data: { bonusAnalyses: { increment: 5 } },
             });
           }
         }

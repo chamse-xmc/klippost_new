@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       ...(platform && { platform }),
     };
 
-    const [videos, total] = await Promise.all([
+    const [videos, total, allAnalyzedVideos] = await Promise.all([
       db.video.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -53,7 +53,82 @@ export async function GET(request: Request) {
         },
       }),
       db.video.count({ where }),
+      // Get all analyzed videos for improvement stats (without platform filter)
+      db.video.findMany({
+        where: {
+          userId: session.user.id,
+          status: "COMPLETED",
+          analysis: { isNot: null },
+        },
+        orderBy: { createdAt: "asc" },
+        select: {
+          createdAt: true,
+          analysis: {
+            select: {
+              viralScore: true,
+              hookScore: true,
+              bodyScore: true,
+              endingScore: true,
+            },
+          },
+        },
+      }),
     ]);
+
+    // Calculate improvement stats
+    let improvementStats = null;
+    if (allAnalyzedVideos.length >= 2) {
+      const scores = allAnalyzedVideos
+        .filter((v) => v.analysis)
+        .map((v) => ({
+          viralScore: v.analysis!.viralScore,
+          hookScore: v.analysis!.hookScore,
+          bodyScore: v.analysis!.bodyScore,
+          endingScore: v.analysis!.endingScore,
+          date: v.createdAt,
+        }));
+
+      if (scores.length >= 2) {
+        const firstScore = scores[0].viralScore;
+        const recentScores = scores.slice(-3);
+        const latestAvg = Math.round(
+          recentScores.reduce((sum, s) => sum + s.viralScore, 0) / recentScores.length
+        );
+
+        // Calculate improvement percentage
+        const improvementPercent = firstScore > 0
+          ? Math.round(((latestAvg - firstScore) / firstScore) * 100)
+          : 0;
+
+        // Determine trend (compare first half vs second half)
+        const midpoint = Math.floor(scores.length / 2);
+        const firstHalfAvg = scores.slice(0, midpoint).reduce((sum, s) => sum + s.viralScore, 0) / midpoint;
+        const secondHalfAvg = scores.slice(midpoint).reduce((sum, s) => sum + s.viralScore, 0) / (scores.length - midpoint);
+        const trend = secondHalfAvg > firstHalfAvg + 5 ? "improving" :
+                      secondHalfAvg < firstHalfAvg - 5 ? "declining" : "stable";
+
+        // Calculate area-specific improvements
+        const firstHook = scores[0].hookScore;
+        const firstBody = scores[0].bodyScore;
+        const firstEnding = scores[0].endingScore;
+        const latestHookAvg = Math.round(recentScores.reduce((sum, s) => sum + s.hookScore, 0) / recentScores.length);
+        const latestBodyAvg = Math.round(recentScores.reduce((sum, s) => sum + s.bodyScore, 0) / recentScores.length);
+        const latestEndingAvg = Math.round(recentScores.reduce((sum, s) => sum + s.endingScore, 0) / recentScores.length);
+
+        improvementStats = {
+          firstScore,
+          latestAvg,
+          improvementPercent,
+          trend,
+          totalVideos: scores.length,
+          areaBreakdown: {
+            hook: { first: firstHook, latest: latestHookAvg, change: latestHookAvg - firstHook },
+            body: { first: firstBody, latest: latestBodyAvg, change: latestBodyAvg - firstBody },
+            ending: { first: firstEnding, latest: latestEndingAvg, change: latestEndingAvg - firstEnding },
+          },
+        };
+      }
+    }
 
     return NextResponse.json({
       videos,
@@ -63,6 +138,7 @@ export async function GET(request: Request) {
         total,
         totalPages: Math.ceil(total / limit),
       },
+      improvementStats,
     });
   } catch (error) {
     console.error("Get videos error:", error);
@@ -87,6 +163,7 @@ export async function POST(request: Request) {
         subscription: true,
         analysesThisMonth: true,
         analysesResetAt: true,
+        bonusAnalyses: true,
       },
     });
 
@@ -120,11 +197,23 @@ export async function POST(request: Request) {
     };
 
     const limit = limits[user.subscription];
+    const bonusAnalyses = user.bonusAnalyses || 0;
+
+    // Check if user has reached their monthly limit
     if (analysesThisMonth >= limit) {
-      return NextResponse.json(
-        { error: "Monthly analysis limit reached. Please upgrade your plan." },
-        { status: 403 }
-      );
+      // Check if they have bonus analyses available
+      if (bonusAnalyses > 0) {
+        // Use a bonus analysis
+        await db.user.update({
+          where: { id: session.user.id },
+          data: { bonusAnalyses: { decrement: 1 } },
+        });
+      } else {
+        return NextResponse.json(
+          { error: "Monthly analysis limit reached. Please upgrade your plan." },
+          { status: 403 }
+        );
+      }
     }
 
     const body = await request.json();

@@ -42,12 +42,15 @@ function Counter({ from, to, duration = 2000 }: { from: number; to: number; dura
 
 // Phone mockup with video analysis animation
 function PhoneMockup() {
-  const [phase, setPhase] = useState<"video" | "scanning" | "results">("video");
+  const [phase, setPhase] = useState<"video" | "scanning" | "results" | "expanded">("video");
   const [score, setScore] = useState(0);
+  const [animKey, setAnimKey] = useState(0);
 
   useEffect(() => {
-    // Animation sequence
+    // Animation sequence (runs once)
     const sequence = async () => {
+      setPhase("video");
+      setScore(0);
       await new Promise(r => setTimeout(r, 1500));
       setPhase("scanning");
       await new Promise(r => setTimeout(r, 2500));
@@ -64,21 +67,33 @@ function PhoneMockup() {
           setScore(current);
         }
       }, 30);
-      await new Promise(r => setTimeout(r, 5000));
-      // Reset and loop
-      setPhase("video");
-      setScore(0);
+      await new Promise(r => setTimeout(r, 2000));
+      // Expand ending section to show improvement tips
+      setPhase("expanded");
     };
 
     sequence();
-    const interval = setInterval(sequence, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [animKey]);
+
+  const resetAnimation = () => {
+    setAnimKey(k => k + 1);
+  };
 
   return (
     <div className="relative">
       {/* Glow effect behind phone */}
       <div className="absolute -inset-8 bg-gradient-to-br from-primary/30 via-pink-500/20 to-purple-500/20 rounded-full blur-3xl" />
+
+      {/* Reset button */}
+      <button
+        onClick={resetAnimation}
+        className="absolute -right-2 -top-2 z-20 w-8 h-8 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+        aria-label="Replay animation"
+      >
+        <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
 
       {/* Phone frame */}
       <motion.div
@@ -87,7 +102,7 @@ function PhoneMockup() {
         transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
         className="relative bg-gray-900 rounded-[40px] p-2 shadow-2xl"
       >
-        <div className="bg-black rounded-[32px] overflow-hidden w-[280px]">
+        <div className="bg-black rounded-[32px] overflow-hidden w-[85vw] max-w-[380px] sm:w-[280px]">
           <div className="relative aspect-[9/16]">
             {/* Video thumbnail - creator recording content */}
             <div className="absolute inset-0">
@@ -109,17 +124,17 @@ function PhoneMockup() {
                 >
                   {/* Scan line */}
                   <motion.div
-                    className="absolute left-0 right-0 h-1 bg-primary"
-                    style={{ boxShadow: "0 0 20px 8px var(--primary), 0 0 40px 16px var(--primary)" }}
+                    className="absolute left-0 right-0 h-1 bg-white"
+                    style={{ boxShadow: "0 0 20px 8px rgba(255,255,255,0.6), 0 0 40px 16px rgba(255,255,255,0.3)" }}
                     initial={{ top: "0%" }}
                     animate={{ top: ["0%", "100%", "0%"] }}
                     transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
                   />
                   {/* Corner brackets */}
-                  <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-primary" />
-                  <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-primary" />
-                  <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-primary" />
-                  <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-primary" />
+                  <div className="absolute top-4 left-4 w-8 h-8 border-l-2 border-t-2 border-white/70" />
+                  <div className="absolute top-4 right-4 w-8 h-8 border-r-2 border-t-2 border-white/70" />
+                  <div className="absolute bottom-4 left-4 w-8 h-8 border-l-2 border-b-2 border-white/70" />
+                  <div className="absolute bottom-4 right-4 w-8 h-8 border-r-2 border-b-2 border-white/70" />
                   {/* Analyzing text */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2">
@@ -135,22 +150,31 @@ function PhoneMockup() {
 
             {/* Results overlay */}
             <AnimatePresence>
-              {phase === "results" && (
+              {(phase === "results" || phase === "expanded") && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex flex-col justify-end p-4"
                 >
-                  {/* Score display */}
+                  {/* Score display - smaller when expanded */}
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
+                    animate={{
+                      scale: phase === "expanded" ? 0.85 : 1,
+                      opacity: 1,
+                    }}
+                    transition={{ delay: phase === "results" ? 0.2 : 0, type: "spring" }}
                     className="bg-primary rounded-2xl p-4 mb-3"
                   >
                     <div className="text-center">
-                      <div className="text-5xl font-extrabold text-white" style={{ fontFamily: "var(--font-nunito)" }}>
+                      <div
+                        className="font-extrabold text-white transition-all"
+                        style={{
+                          fontFamily: "var(--font-nunito)",
+                          fontSize: phase === "expanded" ? "2.5rem" : "3rem",
+                        }}
+                      >
                         {score}
                       </div>
                       <div className="text-white/80 text-sm font-medium">Viral Potential 🎉</div>
@@ -161,25 +185,85 @@ function PhoneMockup() {
                   <motion.div
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
+                    transition={{ delay: phase === "results" ? 0.4 : 0 }}
                     className="space-y-2"
                   >
                     {[
                       { label: "Hook", score: 92 },
                       { label: "Body", score: 85 },
-                      { label: "Ending", score: 78 },
                     ].map((item, i) => (
                       <motion.div
                         key={item.label}
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.5 + i * 0.1 }}
+                        transition={{ delay: phase === "results" ? 0.5 + i * 0.1 : 0 }}
                         className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2"
                       >
                         <span className="text-white text-sm">{item.label}</span>
-                        <span className="text-red-400 font-bold">{item.score}</span>
+                        <span className="text-green-400 font-bold">{item.score}</span>
                       </motion.div>
                     ))}
+
+                    {/* Ending - expandable */}
+                    <motion.div
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{
+                        x: 0,
+                        opacity: 1,
+                        height: phase === "expanded" ? "auto" : "auto",
+                      }}
+                      transition={{ delay: phase === "results" ? 0.7 : 0 }}
+                      className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between px-3 py-2">
+                        <span className="text-white text-sm flex items-center gap-1.5">
+                          Ending
+                          {phase === "expanded" && (
+                            <motion.span
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              className="text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded"
+                            >
+                              Needs work
+                            </motion.span>
+                          )}
+                        </span>
+                        <span className="text-amber-400 font-bold">78</span>
+                      </div>
+
+                      {/* Expanded feedback */}
+                      <AnimatePresence>
+                        {phase === "expanded" && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="border-t border-white/10"
+                          >
+                            <div className="p-3 space-y-2.5">
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.1 }}
+                                className="text-white/70 text-[11px] leading-relaxed"
+                              >
+                                Video ends abruptly without a clear call-to-action. Viewers have no reason to follow or engage.
+                              </motion.p>
+                              <motion.div
+                                initial={{ opacity: 0, y: 5 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="flex items-start gap-2 bg-white/5 rounded-lg p-2"
+                              >
+                                <span className="w-4 h-4 rounded bg-white/20 flex items-center justify-center text-[10px] font-bold text-white shrink-0">1</span>
+                                <span className="text-white/90 text-[11px]">End with a question to spark comments, e.g. "Which one would you pick?"</span>
+                              </motion.div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   </motion.div>
                 </motion.div>
               )}
@@ -318,13 +402,13 @@ function PricingSection() {
           viewport={{ once: true }}
           className="flex justify-center mb-10"
         >
-          <div className="relative bg-white rounded-full p-1.5 shadow-lg border border-gray-200">
-            <div className="relative flex gap-1">
+          <div className="relative bg-white rounded-full p-2 shadow-lg border border-gray-200">
+            <div className="relative flex">
               {PLANS.map((p, i) => (
                 <button
                   key={p.id}
                   onClick={() => setSelectedPlan(i)}
-                  className={`relative z-10 w-28 py-3 text-sm font-semibold text-center transition-colors duration-200 ${
+                  className={`relative z-10 w-32 py-3 text-sm font-semibold text-center transition-colors duration-200 ${
                     selectedPlan === i ? "text-white" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
@@ -491,7 +575,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8"
+                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
               >
                 <Link href="/onboarding">
                   <Button size="lg" className="w-full sm:w-auto rounded-full px-8 py-6 text-lg font-semibold">
@@ -499,34 +583,14 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href="/pricing">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 py-6 text-lg font-semibold bg-white">
-                    View Pricing
-                  </Button>
-                </Link>
-              </motion.div>
-
-              {/* Social proof */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex items-center gap-4 justify-center lg:justify-start text-sm text-gray-600"
-              >
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gray-300 border-2 border-[#F5F3EE]" />
-                  ))}
-                </div>
-                <span>
-                  <span className="font-semibold text-gray-900">2,400+</span> creators analyzing videos
-                </span>
               </motion.div>
             </div>
 
             {/* Right side - Phone mockup */}
             <div className="flex justify-center lg:justify-end">
-              <PhoneMockup />
+              <Link href="/onboarding" className="cursor-pointer">
+                <PhoneMockup />
+              </Link>
             </div>
           </div>
         </div>
@@ -677,10 +741,10 @@ export default function LandingPage() {
               <Link href="/pricing" className="hover:text-gray-900 transition-colors">
                 Pricing
               </Link>
-              <Link href="#" className="hover:text-gray-900 transition-colors">
+              <Link href="/terms" className="hover:text-gray-900 transition-colors">
                 Terms
               </Link>
-              <Link href="#" className="hover:text-gray-900 transition-colors">
+              <Link href="/privacy" className="hover:text-gray-900 transition-colors">
                 Privacy
               </Link>
             </div>

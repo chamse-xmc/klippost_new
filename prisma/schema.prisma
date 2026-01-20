@@ -48,6 +48,9 @@ model User {
   analysesThisMonth Int              @default(0)
   analysesResetAt   DateTime?
 
+  // Bonus analyses (from referrals and reviews)
+  bonusAnalyses     Int              @default(0)  // Extra free analyses earned
+
   // Affiliate Program
   referralCode      String?   @unique  // e.g., "JOHN50"
   referredBy        String?             // referralCode of who referred them
@@ -62,6 +65,7 @@ model User {
   videos            Video[]
   affiliatePayments AffiliatePayment[] @relation("AffiliateEarnings")
   referredPayments  AffiliatePayment[] @relation("ReferredPayments")
+  review            Review?
 }
 
 model Account {
@@ -159,6 +163,37 @@ model Analysis {
 
   // Raw AI response for debugging
   rawResponse      Json?
+
+  // Hook analysis
+  hookType          String?   // CURIOSITY_GAP, PATTERN_INTERRUPT, SHOCK_VALUE, EMOTIONAL, QUESTION
+
+  // Retention
+  retentionScore    Int?      // 0-100
+  retentionDropoffs Json?     // [{ timestamp, reason }]
+
+  // CTA
+  ctaType           String?   // FOLLOW, COMMENT, SHARE, LINK, NONE
+  ctaStrength       Int?      // 0-100
+  ctaFeedback       String?   @db.Text
+
+  // Trends
+  trendScore        Int?      // 0-100
+  trendMatches      Json?     // string[]
+  trendSuggestions  Json?     // string[]
+
+  // Engagement predictions
+  estimatedLikesMin    Int?
+  estimatedLikesMax    Int?
+  estimatedCommentsMin Int?
+  estimatedCommentsMax Int?
+  estimatedSharesMin   Int?
+  estimatedSharesMax   Int?
+
+  // Technical quality
+  audioScore        Int?      // 0-100
+  visualScore       Int?      // 0-100
+  audioFeedback     String?   @db.Text
+  visualFeedback    String?   @db.Text
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -296,4 +331,19 @@ model AffiliatePayment {
   paidAt          DateTime?
 
   createdAt       DateTime     @default(now())
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content     String   @db.Text  // Review text (min 100 characters)
+  rating      Int      // 1-5 stars
+
+  // Bonus tracking
+  bonusGranted Boolean @default(false)  // Whether +5 bonus was given
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

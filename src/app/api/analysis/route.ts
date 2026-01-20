@@ -83,6 +83,41 @@ export async function POST(request: Request) {
           summary: result.summary,
           transcript: result.transcript,
           rawResponse: JSON.parse(JSON.stringify(result)),
+
+          // Hook analysis
+          hookType: result.hookType,
+
+          // Retention
+          retentionScore: result.retentionScore,
+          retentionDropoffs: result.retentionDropoffs ? JSON.parse(JSON.stringify(result.retentionDropoffs)) : undefined,
+
+          // CTA
+          ctaType: result.ctaType,
+          ctaStrength: result.ctaStrength,
+          ctaFeedback: result.ctaFeedback,
+
+          // Trends
+          trendScore: result.trendScore,
+          trendMatches: result.trendMatches ? JSON.parse(JSON.stringify(result.trendMatches)) : undefined,
+          trendSuggestions: result.trendSuggestions ? JSON.parse(JSON.stringify(result.trendSuggestions)) : undefined,
+
+          // Engagement predictions
+          estimatedLikesMin: result.estimatedLikesMin,
+          estimatedLikesMax: result.estimatedLikesMax,
+          estimatedCommentsMin: result.estimatedCommentsMin,
+          estimatedCommentsMax: result.estimatedCommentsMax,
+          estimatedSharesMin: result.estimatedSharesMin,
+          estimatedSharesMax: result.estimatedSharesMax,
+
+          // Technical quality
+          audioScore: result.audioScore,
+          visualScore: result.visualScore,
+          audioFeedback: result.audioFeedback,
+          visualFeedback: result.visualFeedback,
+
+          // Brand value
+          brandValue: result.brandValue,
+
           suggestions: {
             create: result.suggestions.map((s) => ({
               category: s.category as SuggestionCategory,
@@ -123,7 +158,13 @@ export async function POST(request: Request) {
 
       await updateUserScore(session.user.id);
 
-      // Return analysis with goalAdvice from rawResponse
+      // Sort suggestions by priority (CRITICAL > HIGH > MEDIUM > LOW)
+      const priorityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+      const sortedSuggestions = [...analysis.suggestions].sort(
+        (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
+      );
+
+      // Return analysis with all new fields
       return NextResponse.json({
         analysis: {
           id: analysis.id,
@@ -137,13 +178,51 @@ export async function POST(request: Request) {
           bodyFeedback: analysis.bodyFeedback,
           endingFeedback: analysis.endingFeedback,
           summary: analysis.summary,
+          transcript: analysis.transcript,
           goalAdvice: result.goalAdvice || [],
-          suggestions: analysis.suggestions.map((s) => ({
+
+          // Hook analysis
+          hookType: analysis.hookType,
+
+          // Retention
+          retentionScore: analysis.retentionScore,
+          retentionDropoffs: analysis.retentionDropoffs,
+
+          // CTA
+          ctaType: analysis.ctaType,
+          ctaStrength: analysis.ctaStrength,
+          ctaFeedback: analysis.ctaFeedback,
+
+          // Trends
+          trendScore: analysis.trendScore,
+          trendMatches: analysis.trendMatches,
+          trendSuggestions: analysis.trendSuggestions,
+
+          // Engagement predictions
+          estimatedLikesMin: analysis.estimatedLikesMin,
+          estimatedLikesMax: analysis.estimatedLikesMax,
+          estimatedCommentsMin: analysis.estimatedCommentsMin,
+          estimatedCommentsMax: analysis.estimatedCommentsMax,
+          estimatedSharesMin: analysis.estimatedSharesMin,
+          estimatedSharesMax: analysis.estimatedSharesMax,
+
+          // Technical quality
+          audioScore: analysis.audioScore,
+          visualScore: analysis.visualScore,
+          audioFeedback: analysis.audioFeedback,
+          visualFeedback: analysis.visualFeedback,
+
+          // Brand value
+          brandValue: analysis.brandValue,
+
+          suggestions: sortedSuggestions.map((s) => ({
             id: s.id,
             suggestion: s.description,
+            description: s.description,
             priority: s.priority,
             title: s.title,
             category: s.category,
+            timestamp: s.timestamp,
           })),
         },
         video: updatedVideo,
