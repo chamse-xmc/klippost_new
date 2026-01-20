@@ -444,6 +444,22 @@ export default function DashboardPage() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showLockedResults, setShowLockedResults] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Fetch user data for review status
+  const { data: userData, refetch: refetchUser } = useQuery<{ review: { id: string } | null }>({
+    queryKey: ["user-review"],
+    queryFn: async () => {
+      const res = await fetch("/api/user");
+      if (!res.ok) throw new Error("Failed to fetch user");
+      return res.json();
+    },
+  });
+
+  const hasReviewed = !!userData?.review;
 
   const { data: videosData, isLoading: videosLoading } = useQuery<{ videos: VideoData[]; improvementStats: ImprovementStats | null }>({
     queryKey: ["videos"],
@@ -663,6 +679,38 @@ export default function DashboardPage() {
       console.error("Checkout error:", error);
       alert(error instanceof Error ? error.message : "Failed to start checkout");
       setIsCheckingOut(false);
+    }
+  };
+
+  // Submit review for bonus analyses
+  const handleSubmitReview = async () => {
+    if (reviewContent.length < 100) {
+      alert("Review must be at least 100 characters");
+      return;
+    }
+    setIsSubmittingReview(true);
+    try {
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: reviewContent, rating: reviewRating }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to submit review");
+      }
+      const data = await res.json();
+      await refetchUser();
+      setShowReviewModal(false);
+      setShowLockedResults(false);
+      setReviewContent("");
+      // Clear selection and let user try again with bonus analyses
+      clearSelection();
+      alert(`Thanks! +${data.bonusAmount} free analyses added. Upload your video again!`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to submit review");
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -1510,6 +1558,18 @@ export default function DashboardPage() {
             </div>
 
             <div className="space-y-2">
+              {/* Review for bonus - only show if user hasn't reviewed */}
+              {!hasReviewed && (
+                <button
+                  onClick={() => setShowReviewModal(true)}
+                  className="w-full py-4 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                  </svg>
+                  Write a Review — Get 5 Free
+                </button>
+              )}
               <button
                 onClick={() => handleUpgrade("PRO")}
                 disabled={isCheckingOut}
@@ -1691,6 +1751,91 @@ export default function DashboardPage() {
                 </div>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowReviewModal(false)}
+          />
+          <div className="relative bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-slide-up">
+            <div>
+              <h3 className="text-xl font-bold text-foreground">
+                Get 5 Free Analyses
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Write a quick review (100+ characters) and unlock 5 more video analyses!
+              </p>
+            </div>
+
+            {/* Star Rating */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rating</label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setReviewRating(star)}
+                    className="p-1 transition-transform hover:scale-110"
+                  >
+                    <svg
+                      className={`w-8 h-8 ${star <= reviewRating ? "text-yellow-400" : "text-muted"}`}
+                      fill={star <= reviewRating ? "currentColor" : "none"}
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Review Text */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Your Review
+              </label>
+              <textarea
+                value={reviewContent}
+                onChange={(e) => setReviewContent(e.target.value)}
+                placeholder="What do you think of klippost? How has it helped your content?"
+                rows={4}
+                className="w-full px-4 py-3 rounded-xl bg-muted border-0 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              />
+              <div className="flex justify-between text-xs">
+                <span className={reviewContent.length >= 100 ? "text-green-500" : "text-muted-foreground"}>
+                  {reviewContent.length}/100 characters
+                </span>
+                {reviewContent.length >= 100 && (
+                  <span className="text-amber-500 font-medium">+5 free analyses!</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setShowReviewModal(false);
+                  setReviewContent("");
+                }}
+                className="flex-1 py-3 px-4 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={reviewContent.length < 100 || isSubmittingReview}
+                onClick={handleSubmitReview}
+                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingReview ? "Submitting..." : "Submit & Get 5 Free"}
+              </button>
+            </div>
           </div>
         </div>
       )}

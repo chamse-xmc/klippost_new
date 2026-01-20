@@ -6,8 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { getTitleDisplay } from "@/lib/title-utils";
-import type { FollowerRange, Goal, Challenge, CreatorTitle } from "@prisma/client";
+import type { FollowerRange, Goal, Challenge } from "@prisma/client";
 
 interface Review {
   id: string;
@@ -92,11 +91,7 @@ export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
-  // Bonus/review states
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviewContent, setReviewContent] = useState("");
-  const [reviewRating, setReviewRating] = useState(5);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  // Referral state
   const [isCreatingReferral, setIsCreatingReferral] = useState(false);
   const [origin, setOrigin] = useState("");
 
@@ -189,38 +184,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Submit review
-  const handleSubmitReview = async () => {
-    if (reviewContent.length < 100) {
-      toast.error("Review must be at least 100 characters");
-      return;
-    }
-    setIsSubmittingReview(true);
-    try {
-      const res = await fetch("/api/review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: reviewContent, rating: reviewRating }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to submit review");
-      }
-      const data = await res.json();
-      await queryClient.invalidateQueries({ queryKey: ["user"] });
-      setShowReviewModal(false);
-      if (data.bonusGranted) {
-        toast.success(`Review submitted! +${data.bonusAmount} free analyses added!`);
-      } else {
-        toast.success("Review updated!");
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to submit review");
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="mx-auto max-w-xl space-y-4 animate-pulse">
@@ -309,34 +272,6 @@ export default function SettingsPage() {
               </button>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-card border border-border p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Score</p>
-          <p className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-            {user?.overallScore || 0}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Title</p>
-          <p className="text-xl font-bold text-foreground">
-            {user?.title ? getTitleDisplay(user.title) : "Newbie"}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Videos</p>
-          <p className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-            {user?.videosAnalyzed || 0}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-card border border-border p-5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">This Month</p>
-          <p className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-            {user?.analysesThisMonth || 0}
-          </p>
         </div>
       </div>
 
@@ -433,7 +368,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Referral */}
-        <div className="p-5 border-b border-border">
+        <div className="p-5">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
               <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -464,42 +399,6 @@ export default function SettingsPage() {
                   {isCreatingReferral ? "Creating..." : "Get Referral Link"}
                 </button>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Review */}
-        <div className="p-5">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground">Leave a Review</p>
-              <p className="text-sm text-muted-foreground mb-3">
-                {user?.review
-                  ? "Thanks for your review!"
-                  : "Get +5 free analyses for writing a review (100+ chars)"}
-              </p>
-              <button
-                onClick={() => {
-                  if (user?.review) {
-                    setReviewContent(user.review.content);
-                    setReviewRating(user.review.rating);
-                  }
-                  setShowReviewModal(true);
-                }}
-                className={cn(
-                  "px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
-                  user?.review
-                    ? "bg-muted text-foreground hover:bg-muted/80"
-                    : "bg-primary text-primary-foreground hover:opacity-90"
-                )}
-              >
-                {user?.review ? "Edit Review" : "Write Review"}
-              </button>
             </div>
           </div>
         </div>
@@ -663,99 +562,6 @@ export default function SettingsPage() {
                 className="flex-1 py-3 px-4 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? "Deleting..." : "Delete Account"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Review Modal */}
-      {showReviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowReviewModal(false)}
-          />
-          <div className="relative bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-slide-up">
-            <div>
-              <h3 className="text-xl font-bold text-foreground">
-                {user?.review ? "Edit Your Review" : "Write a Review"}
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {user?.review
-                  ? "Update your review below."
-                  : "Share your experience and get +5 free analyses!"}
-              </p>
-            </div>
-
-            {/* Star Rating */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rating</label>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => setReviewRating(star)}
-                    className="p-1 transition-transform hover:scale-110"
-                  >
-                    <svg
-                      className={cn("w-8 h-8", star <= reviewRating ? "text-yellow-400" : "text-muted")}
-                      fill={star <= reviewRating ? "currentColor" : "none"}
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                    </svg>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Review Text */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Your Review <span className="text-muted-foreground/60">(min 100 characters)</span>
-              </label>
-              <textarea
-                value={reviewContent}
-                onChange={(e) => setReviewContent(e.target.value)}
-                placeholder="Tell us about your experience with klippost..."
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl bg-muted border-0 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-              />
-              <div className="flex justify-between text-xs">
-                <span className={cn(
-                  "transition-colors",
-                  reviewContent.length >= 100 ? "text-green-500" : "text-muted-foreground"
-                )}>
-                  {reviewContent.length}/100 characters
-                </span>
-                {reviewContent.length >= 100 && !user?.review && (
-                  <span className="text-primary font-medium">+5 free analyses!</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setShowReviewModal(false);
-                  if (!user?.review) {
-                    setReviewContent("");
-                    setReviewRating(5);
-                  }
-                }}
-                className="flex-1 py-3 px-4 rounded-xl bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={reviewContent.length < 100 || isSubmittingReview}
-                onClick={handleSubmitReview}
-                className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmittingReview ? "Submitting..." : "Submit Review"}
               </button>
             </div>
           </div>
