@@ -56,15 +56,6 @@ export default function OnboardingLayout({
         </div>
       </div>
 
-      {/* Brand mark */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
-        <div className="w-5 h-5 rounded bg-primary/20 flex items-center justify-center">
-          <svg className="w-2.5 h-2.5 text-primary" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5.14v14l11-7-11-7z" />
-          </svg>
-        </div>
-        klippost
-      </div>
     </div>
   );
 }

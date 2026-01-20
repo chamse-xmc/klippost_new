@@ -11,20 +11,21 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { plan } = body as { plan: "PRO" | "UNLIMITED" };
+    const { plan, returnUrl } = body as { plan: "PRO" | "UNLIMITED"; returnUrl?: string };
 
     if (!plan || !PLANS[plan]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
     }
 
     const { origin } = new URL(request.url);
+    const successUrl = returnUrl ? `${origin}${returnUrl}` : `${origin}/dashboard?success=true`;
 
     const checkoutSession = await createCheckoutSession(
       session.user.id,
       session.user.email,
       PLANS[plan].priceId,
-      `${origin}/dashboard?success=true`,
-      `${origin}/pricing?canceled=true`
+      successUrl,
+      `${origin}/dashboard?canceled=true`
     );
 
     return NextResponse.json({ url: checkoutSession.url });

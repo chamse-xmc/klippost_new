@@ -5,6 +5,10 @@ import { db } from "@/lib/db";
 import type Stripe from "stripe";
 
 export async function POST(request: Request) {
+  if (!stripe) {
+    return NextResponse.json({ error: "Stripe is not configured" }, { status: 500 });
+  }
+
   const body = await request.text();
   const headersList = await headers();
   const signature = headersList.get("stripe-signature")!;

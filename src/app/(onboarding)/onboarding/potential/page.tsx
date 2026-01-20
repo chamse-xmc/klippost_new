@@ -87,25 +87,25 @@ export default function OnboardingPotentialPage() {
           <div className="text-muted-foreground text-sm mt-1">potential view increase</div>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-3 rounded-lg bg-muted">
-            <div className="text-xs text-muted-foreground mb-1">Expected Views</div>
-            <div className="font-bold text-foreground text-sm">
+        {/* Stats */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+            <span className="text-sm text-muted-foreground">Expected Views</span>
+            <span className="font-bold text-foreground">
               {potential.viewRangeMin.toLocaleString()}-{potential.viewRangeMax.toLocaleString()}
-            </div>
+            </span>
           </div>
-          <div className="text-center p-3 rounded-lg bg-muted">
-            <div className="text-xs text-muted-foreground mb-1">Creator Type</div>
-            <div className="font-bold text-foreground text-sm truncate">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+            <span className="text-sm text-muted-foreground">Creator Type</span>
+            <span className="font-bold text-foreground">
               {potential.creatorType}
-            </div>
+            </span>
           </div>
-          <div className="text-center p-3 rounded-lg bg-muted">
-            <div className="text-xs text-muted-foreground mb-1">Focus Area</div>
-            <div className="font-bold text-foreground text-sm truncate">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
+            <span className="text-sm text-muted-foreground">Focus Area</span>
+            <span className="font-bold text-foreground">
               {potential.focusArea}
-            </div>
+            </span>
           </div>
         </div>
       </div>

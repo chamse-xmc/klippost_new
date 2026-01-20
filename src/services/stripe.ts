@@ -1,6 +1,8 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Initialize Stripe only if key is available
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+export const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
 export const PLANS = {
   PRO: {
@@ -24,6 +26,10 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ) {
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment.");
+  }
+
   const session = await stripe.checkout.sessions.create({
     customer_email: email,
     mode: "subscription",
@@ -50,6 +56,10 @@ export async function createCheckoutSession(
 }
 
 export async function createPortalSession(customerId: string, returnUrl: string) {
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment.");
+  }
+
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
