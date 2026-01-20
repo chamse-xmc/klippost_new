@@ -22,7 +22,7 @@ export default function OnboardingFollowersPage() {
 
   const handleNext = () => {
     if (followerRange) {
-      router.push("/onboarding/goals");
+      router.push("/onboarding/source");
     }
   };
 
@@ -30,7 +30,7 @@ export default function OnboardingFollowersPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-3">
-        <p className="text-sm text-muted-foreground">Step 1 of 4</p>
+        <p className="text-sm text-muted-foreground">Step 1 of 5</p>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
           How many followers do you have?
         </h1>

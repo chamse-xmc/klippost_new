@@ -41,7 +41,7 @@ export default function OnboardingGoalsPage() {
   };
 
   const handleBack = () => {
-    router.push("/onboarding");
+    router.push("/onboarding/source");
   };
 
   const handleNext = () => {
@@ -54,7 +54,7 @@ export default function OnboardingGoalsPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-3">
-        <p className="text-sm text-muted-foreground">Step 2 of 4</p>
+        <p className="text-sm text-muted-foreground">Step 3 of 5</p>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
           What are your goals?
         </h1>

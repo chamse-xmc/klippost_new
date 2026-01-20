@@ -33,6 +33,7 @@ model User {
   followerRange   FollowerRange?
   goals           Goal[]
   challenges      Challenge[]
+  heardFrom       HeardFrom?
   onboardedAt     DateTime?
 
   // Creator stats (weighted score where recent videos count more)
@@ -292,6 +293,16 @@ enum Challenge {
   DONT_KNOW          // I don't know what's wrong
   HOOKS_NOT_WORKING  // Hooks aren't working
   INCONSISTENT       // Inconsistent results
+}
+
+enum HeardFrom {
+  TIKTOK             // Saw on TikTok
+  YOUTUBE            // Saw on YouTube
+  INSTAGRAM          // Saw on Instagram
+  TWITTER            // Saw on Twitter/X
+  FRIEND             // Friend told me
+  GOOGLE             // Google search
+  OTHER              // Other
 }
 
 enum SubscriptionTier {

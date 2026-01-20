@@ -54,7 +54,7 @@ export default function OnboardingChallengesPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-3">
-        <p className="text-sm text-muted-foreground">Step 3 of 4</p>
+        <p className="text-sm text-muted-foreground">Step 4 of 5</p>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
           What's holding you back?
         </h1>

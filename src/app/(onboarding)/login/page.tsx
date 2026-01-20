@@ -1,52 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { useOnboardingStore } from "@/lib/onboarding-store";
-import { calculatePotential } from "@/services/potential-calculator";
-import { cn } from "@/lib/utils";
 
-export default function OnboardingPotentialPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
-  const { followerRange, heardFrom, goals, challenges, reset } = useOnboardingStore();
-  const [potential, setPotential] = useState<ReturnType<typeof calculatePotential> | null>(null);
+  const { status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [testEmail, setTestEmail] = useState("test@example.com");
 
   useEffect(() => {
-    if (followerRange && goals.length > 0 && challenges.length > 0) {
-      setPotential(calculatePotential(followerRange, goals, challenges));
-    }
-  }, [followerRange, goals, challenges]);
-
-  useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      // Only save if we have onboarding data
-      if (followerRange && goals.length > 0 && challenges.length > 0) {
-        saveOnboardingData();
-      } else {
-        // No onboarding data, just go to dashboard
-        router.push("/dashboard");
-      }
-    }
-  }, [status, session, followerRange, goals, challenges]);
-
-  const saveOnboardingData = async () => {
-    try {
-      await fetch("/api/user/onboarding", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ followerRange, heardFrom, goals, challenges }),
-      });
-      reset();
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Failed to save onboarding data:", error);
+    if (status === "authenticated") {
       router.push("/dashboard");
     }
-  };
+  }, [status, router]);
 
   const handleSignIn = async (provider: "google" | "facebook") => {
     setIsLoading(true);
@@ -61,32 +29,7 @@ export default function OnboardingPotentialPage() {
     });
   };
 
-  const handleBack = () => {
-    router.push("/onboarding/challenges");
-  };
-
-  // If already authenticated, go to dashboard
-  if (status === "authenticated") {
-    // Only save onboarding data if we have it
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Still loading session status
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // If no onboarding data, redirect to start of onboarding
-  if (!potential) {
-    router.push("/onboarding");
+  if (status === "loading" || status === "authenticated") {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
@@ -98,43 +41,12 @@ export default function OnboardingPotentialPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-3">
-        <p className="text-sm text-muted-foreground">Step 5 of 5</p>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
-          Your growth potential
+          Welcome back
         </h1>
-      </div>
-
-      {/* Potential Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary bg-card p-6 animate-slide-up">
-        {/* Big number */}
-        <div className="text-center mb-6">
-          <div className="text-6xl font-bold text-primary animate-scale-bounce">
-            {potential.improvementPercent}%
-          </div>
-          <div className="text-muted-foreground text-sm mt-1">potential view increase</div>
-        </div>
-
-        {/* Stats */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-            <span className="text-sm text-muted-foreground">Expected Views</span>
-            <span className="font-bold text-foreground">
-              {potential.viewRangeMin.toLocaleString()}-{potential.viewRangeMax.toLocaleString()}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-            <span className="text-sm text-muted-foreground">Creator Type</span>
-            <span className="font-bold text-foreground">
-              {potential.creatorType}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-            <span className="text-sm text-muted-foreground">Focus Area</span>
-            <span className="font-bold text-foreground">
-              {potential.focusArea}
-            </span>
-          </div>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          Sign in to continue to your dashboard
+        </p>
       </div>
 
       {/* Auth section */}
@@ -143,7 +55,7 @@ export default function OnboardingPotentialPage() {
           <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="space-y-3 animate-slide-up" style={{ animationDelay: "0.2s", animationFillMode: "forwards", opacity: 0 }}>
+        <div className="space-y-3 animate-slide-up">
           {/* Test Login */}
           <div className="rounded-xl border-2 border-dashed border-border bg-muted p-4">
             <div className="text-center text-xs font-semibold text-muted-foreground mb-3">
@@ -201,10 +113,10 @@ export default function OnboardingPotentialPage() {
           </button>
 
           <button
-            onClick={handleBack}
+            onClick={() => router.push("/onboarding")}
             className="w-full py-4 px-6 rounded-xl font-semibold border border-border text-foreground hover:bg-muted transition-all"
           >
-            Back
+            New here? Start onboarding
           </button>
         </div>
       )}

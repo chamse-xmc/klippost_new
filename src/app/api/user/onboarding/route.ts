@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import type { FollowerRange, Goal, Challenge } from "@prisma/client";
+import type { FollowerRange, Goal, Challenge, HeardFrom } from "@prisma/client";
 
 export async function PUT(request: Request) {
   try {
@@ -12,8 +12,9 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { followerRange, goals, challenges } = body as {
+    const { followerRange, heardFrom, goals, challenges } = body as {
       followerRange: FollowerRange;
+      heardFrom: HeardFrom;
       goals: Goal[];
       challenges: Challenge[];
     };
@@ -22,6 +23,7 @@ export async function PUT(request: Request) {
       where: { id: session.user.id },
       data: {
         followerRange,
+        heardFrom,
         goals,
         challenges,
         onboardedAt: new Date(),

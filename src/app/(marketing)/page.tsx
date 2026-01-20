@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Play, Sparkles, TrendingUp, Target, Zap, Check } from "lucide-react";
+import { ArrowRight, Play, Sparkles, TrendingUp, Target, Zap, Check, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Animated counter component
@@ -533,6 +533,117 @@ function PricingSection() {
   );
 }
 
+// Testimonials data
+const TESTIMONIALS = [
+  {
+    name: "Sarah",
+    role: "TikTok, 2.4K followers",
+    quote: "I was mass posting and getting like 200-300 views each. klippost told me my hooks were boring. Changed how I open my videos and now I'm hitting 5-10K consistently.",
+    initials: "S",
+  },
+  {
+    name: "Marcus",
+    role: "YouTube Shorts, 800 subs",
+    quote: "Been posting for 6 months with zero traction. The AI roasted my endings honestly. Added a proper CTA and my last video got 12K views. First time breaking 1K.",
+    initials: "M",
+  },
+  {
+    name: "Emma",
+    role: "Instagram Reels",
+    quote: "I used to just post and hope. Now I actually understand why some videos flop. It's not magic but it helps you stop making the same mistakes.",
+    initials: "E",
+  },
+  {
+    name: "Jake",
+    role: "Fitness content, 5K",
+    quote: "Thought my content was fine but I was losing people in the middle every time. The body analysis showed me exactly where. Small tweaks, big difference.",
+    initials: "J",
+  },
+  {
+    name: "Priya",
+    role: "Starting out on TikTok",
+    quote: "Only have 400 followers but my last 3 videos got way more views than before. The suggestions are actually useful, not generic advice.",
+    initials: "P",
+  },
+];
+
+// Testimonials Section
+function TestimonialsSection() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: "left" | "right") => {
+    if (scrollRef.current) {
+      const scrollAmount = 340;
+      scrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  return (
+    <section className="py-20 px-4 sm:px-6 bg-white overflow-hidden">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center gap-2">
+            <Heart className="w-8 h-8 sm:w-9 sm:h-9 text-red-500" fill="currentColor" />'d by creators
+          </h2>
+        </div>
+
+        {/* Scrollable container */}
+        <div
+          ref={scrollRef}
+          className="flex gap-6 overflow-x-auto pb-4 scroll-smooth"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {TESTIMONIALS.map((testimonial) => (
+            <div
+              key={testimonial.name}
+              className="flex-shrink-0 w-[320px] bg-white border-2 border-gray-100 rounded-3xl p-8"
+            >
+              {/* Author - at top */}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center text-white text-xl font-black">
+                  {testimonial.initials}
+                </div>
+                <div>
+                  <p className="font-black text-gray-900">{testimonial.name}</p>
+                  <p className="text-sm text-gray-500">{testimonial.role}</p>
+                </div>
+              </div>
+
+              {/* Quote */}
+              <p
+                className="text-gray-700 text-lg leading-relaxed"
+                style={{ fontFamily: "ui-monospace, monospace" }}
+              >
+                "{testimonial.quote}"
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Navigation buttons - centered below */}
+        <div className="flex justify-center gap-4 mt-8">
+          <button
+            onClick={() => scroll("left")}
+            className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300 ease-out hover:scale-110"
+          >
+            <ChevronLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            className="p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition-all duration-300 ease-out hover:scale-110"
+          >
+            <ChevronRight className="w-6 h-6 text-gray-700" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F5F3EE]">
@@ -696,6 +807,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials */}
+      <TestimonialsSection />
 
       {/* Pricing Preview - Interactive */}
       <PricingSection />

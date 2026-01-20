@@ -77,7 +77,7 @@ export default function MarketingLayout({
               Get Started
             </Link>
             <Link
-              href="/api/auth/signin"
+              href="/login"
               onClick={() => setMenuOpen(false)}
               className="block px-4 py-3 text-gray-700 hover:bg-gray-200/50 rounded-xl font-medium transition-colors"
             >

@@ -99,7 +99,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
   pages: {
-    signIn: "/onboarding/potential",
-    error: "/onboarding/potential",
+    signIn: "/login",
+    error: "/login",
   },
 };
