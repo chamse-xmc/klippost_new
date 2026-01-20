@@ -240,7 +240,7 @@ function PhoneMockup() {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2, type: "spring" }}
-        className="absolute -left-4 lg:-left-16 top-[38%] bg-white rounded-2xl shadow-lg border border-gray-200 px-3 py-2 max-w-[180px] z-10"
+        className="absolute -left-4 lg:-left-16 top-[28%] bg-white rounded-2xl shadow-lg border border-gray-200 px-3 py-2 max-w-[180px] z-10"
       >
         <div className="flex items-start gap-2">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
