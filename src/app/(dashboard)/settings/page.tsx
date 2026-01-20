@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
@@ -65,10 +65,25 @@ const DELETE_REASONS = [
   { value: "other", label: "Other reason" },
 ];
 
+// Component that handles search params (needs Suspense boundary)
+function UpgradeHandler({ onUpgrade }: { onUpgrade: (plan: "PRO" | "UNLIMITED") => void }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const upgradePlan = searchParams.get("upgrade");
+    if (upgradePlan === "pro") {
+      onUpgrade("PRO");
+    } else if (upgradePlan === "unlimited") {
+      onUpgrade("UNLIMITED");
+    }
+  }, [searchParams, onUpgrade]);
+
+  return null;
+}
+
 export default function SettingsPage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -91,7 +106,7 @@ export default function SettingsPage() {
   }, []);
 
   // Stripe checkout handler
-  const handleUpgrade = async (plan: "PRO" | "UNLIMITED") => {
+  const handleUpgrade = useCallback(async (plan: "PRO" | "UNLIMITED") => {
     setIsCheckingOut(true);
     try {
       const res = await fetch("/api/stripe/checkout", {
@@ -112,17 +127,7 @@ export default function SettingsPage() {
       toast.error(error instanceof Error ? error.message : "Failed to start checkout");
       setIsCheckingOut(false);
     }
-  };
-
-  // Auto-trigger checkout from URL param
-  useEffect(() => {
-    const upgradePlan = searchParams.get("upgrade");
-    if (upgradePlan === "pro") {
-      handleUpgrade("PRO");
-    } else if (upgradePlan === "unlimited") {
-      handleUpgrade("UNLIMITED");
-    }
-  }, [searchParams]);
+  }, []);
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ["user"],
@@ -229,6 +234,11 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
+      {/* Handle upgrade URL params */}
+      <Suspense fallback={null}>
+        <UpgradeHandler onUpgrade={handleUpgrade} />
+      </Suspense>
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
