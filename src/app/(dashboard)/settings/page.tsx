@@ -23,11 +23,7 @@ interface UserData {
   followerRange: FollowerRange | null;
   goals: Goal[];
   challenges: Challenge[];
-  overallScore: number;
-  title: CreatorTitle;
-  videosAnalyzed: number;
   subscription: string;
-  analysesThisMonth: number;
   bonusAnalyses: number;
   referralCode: string | null;
   review: Review | null;
