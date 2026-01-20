@@ -59,7 +59,29 @@ export default function OnboardingPotentialPage() {
     router.push("/onboarding/challenges");
   };
 
+  // If no onboarding data, redirect to start or show auth directly
   if (!potential) {
+    // If already authenticated, go to dashboard
+    if (status === "authenticated") {
+      router.push("/dashboard");
+      return (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+
+    // If not authenticated and no onboarding data, redirect to start onboarding
+    if (status === "unauthenticated") {
+      router.push("/onboarding");
+      return (
+        <div className="flex items-center justify-center py-20">
+          <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
+
+    // Still loading session status
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
