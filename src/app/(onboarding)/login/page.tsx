@@ -8,6 +8,8 @@ export default function LoginPage() {
   const router = useRouter();
   const { status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -15,15 +17,84 @@ export default function LoginPage() {
     }
   }, [status, router]);
 
-  const handleSignIn = async (provider: "google" | "facebook") => {
+  const handleGoogleSignIn = async () => {
     setIsLoading(true);
-    await signIn(provider, { callbackUrl: "/app" });
+    await signIn("google", { callbackUrl: "/app" });
+  };
+
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const result = await signIn("email", {
+        email: email.trim(),
+        redirect: false,
+        callbackUrl: "/app"
+      });
+
+      if (result?.ok) {
+        setEmailSent(true);
+      }
+    } catch (error) {
+      console.error("Email sign in error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (status === "loading" || status === "authenticated") {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (emailSent) {
+    return (
+      <div className="space-y-6">
+        {/* Logo */}
+        <div className="flex justify-center">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+              <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5.14v14l11-7-11-7z" />
+              </svg>
+            </div>
+            <span className="font-bold text-xl text-foreground tracking-tight">klippost</span>
+          </div>
+        </div>
+
+        {/* Header */}
+        <div className="text-center space-y-3">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground tracking-tight">
+            Check your email
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            We sent a sign-in link to <span className="text-foreground font-medium">{email}</span>
+          </p>
+        </div>
+
+        {/* Info */}
+        <div className="bg-muted rounded-xl p-4 text-sm text-muted-foreground space-y-2">
+          <p>The link will expire in 24 hours.</p>
+          <p>Check your spam folder if you don't see the email.</p>
+        </div>
+
+        {/* Back button */}
+        <button
+          onClick={() => setEmailSent(false)}
+          className="w-full py-4 px-6 rounded-xl font-semibold border border-border text-foreground hover:bg-muted transition-all"
+        >
+          Try a different email
+        </button>
       </div>
     );
   }
@@ -58,10 +129,39 @@ export default function LoginPage() {
           <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="space-y-3 animate-slide-up">
-          {/* Social buttons */}
+        <div className="space-y-4 animate-slide-up">
+          {/* Email form */}
+          <form onSubmit={handleEmailSignIn} className="space-y-3">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="w-full py-4 px-4 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              required
+            />
+            <button
+              type="submit"
+              disabled={!email.trim()}
+              className="w-full py-4 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Continue with Email
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          {/* Google button */}
           <button
-            onClick={() => handleSignIn("google")}
+            onClick={handleGoogleSignIn}
             className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl border border-border bg-card hover:bg-muted transition-all font-semibold text-foreground"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -70,17 +170,7 @@ export default function LoginPage() {
               <path fill="currentColor" fillOpacity="0.5" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
               <path fill="currentColor" fillOpacity="0.7" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
-            Google
-          </button>
-
-          <button
-            onClick={() => handleSignIn("facebook")}
-            className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl border border-border bg-card hover:bg-muted transition-all font-semibold text-foreground"
-          >
-            <svg className="w-5 h-5" fill="currentColor" fillOpacity="0.7" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            Facebook
+            Continue with Google
           </button>
 
           <button

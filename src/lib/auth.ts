@@ -1,20 +1,69 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import FacebookProvider from "next-auth/providers/facebook";
+import EmailProvider from "next-auth/providers/email";
 import { cookies } from "next/headers";
 import { db } from "./db";
+import { sendEmail } from "@/services/email";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),
   providers: [
+    EmailProvider({
+      server: {}, // We use custom sendVerificationRequest
+      from: process.env.MAILGUN_FROM_EMAIL || 'klippost <noreply@mail.klippost.co>',
+      sendVerificationRequest: async ({ identifier: email, url }) => {
+        const result = await sendEmail({
+          to: email,
+          subject: 'Sign in to klippost',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0a; padding: 40px 20px;">
+              <div style="max-width: 400px; margin: 0 auto; background: #171717; border-radius: 16px; padding: 40px; border: 1px solid #262626;">
+                <div style="text-align: center; margin-bottom: 32px;">
+                  <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #8b5cf6; border-radius: 12px; margin-bottom: 16px;">
+                    <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
+                      <path d="M8 5.14v14l11-7-11-7z" />
+                    </svg>
+                  </div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #fafafa;">Sign in to klippost</h1>
+                </div>
+
+                <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
+                  Click the button below to sign in. This link expires in 24 hours.
+                </p>
+
+                <a href="${url}" style="display: block; background: #8b5cf6; color: white; text-decoration: none; padding: 14px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; text-align: center; margin-bottom: 24px;">
+                  Sign in to klippost
+                </a>
+
+                <p style="color: #71717a; font-size: 13px; line-height: 1.5; margin: 0; text-align: center;">
+                  If you didn't request this email, you can safely ignore it.
+                </p>
+              </div>
+
+              <p style="color: #52525b; font-size: 12px; text-align: center; margin-top: 24px;">
+                klippost - AI Video Analysis
+              </p>
+            </body>
+            </html>
+          `,
+          text: `Sign in to klippost\n\nClick this link to sign in: ${url}\n\nThis link expires in 24 hours.\n\nIf you didn't request this email, you can safely ignore it.`,
+        });
+
+        if (!result.success) {
+          throw new Error(`Failed to send verification email: ${result.error}`);
+        }
+      },
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "not-configured",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "not-configured",
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID || "not-configured",
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET || "not-configured",
     }),
   ],
   session: {
@@ -58,36 +107,16 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, account }) {
-      // On initial sign in, store user ID and mark as OAuth verified
+      // On initial sign in, store user ID
       if (user && account) {
         token.id = user.id;
         token.provider = account.provider;
-        token.oauthVerified = true;
-      }
-
-      // If token doesn't have oauthVerified flag (old credentials sessions), invalidate
-      if (token.id && !token.oauthVerified) {
-        // Check if user has OAuth account (one-time check)
-        const dbUser = await db.user.findUnique({
-          where: { id: token.id as string },
-          include: { accounts: { select: { provider: true } } },
-        });
-
-        if (!dbUser || dbUser.accounts.length === 0) {
-          // Invalidate old credentials-based sessions by marking as invalid
-          token.invalidated = true;
-          return token;
-        }
-
-        // User has OAuth account, mark as verified
-        token.oauthVerified = true;
       }
 
       return token;
     },
     async session({ session, token }) {
-      // If token was invalidated, return empty session
-      if (token.invalidated || !token.id) {
+      if (!token.id) {
         return { ...session, user: undefined };
       }
 
@@ -99,6 +128,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+    verifyRequest: "/login/verify",
     error: "/login",
   },
 };

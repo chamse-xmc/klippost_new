@@ -50,9 +50,9 @@ export async function POST(request: Request) {
             console.log("Price ID:", priceId, "Expected PRO:", process.env.STRIPE_PRICE_PRO, "Expected UNLIMITED:", process.env.STRIPE_PRICE_UNLIMITED);
 
             const tier =
-              priceId === process.env.STRIPE_PRICE_PRO
+              priceId === process.env.STRIPE_PRICE_PRO || priceId === process.env.STRIPE_PRICE_PRO_YEARLY
                 ? "PRO"
-                : priceId === process.env.STRIPE_PRICE_UNLIMITED
+                : priceId === process.env.STRIPE_PRICE_UNLIMITED || priceId === process.env.STRIPE_PRICE_UNLIMITED_YEARLY
                 ? "UNLIMITED"
                 : "FREE";
 
@@ -124,9 +124,9 @@ export async function POST(request: Request) {
         if (userId) {
           const priceId = subscription.items.data[0]?.price.id;
           const tier =
-            priceId === process.env.STRIPE_PRICE_PRO
+            priceId === process.env.STRIPE_PRICE_PRO || priceId === process.env.STRIPE_PRICE_PRO_YEARLY
               ? "PRO"
-              : priceId === process.env.STRIPE_PRICE_UNLIMITED
+              : priceId === process.env.STRIPE_PRICE_UNLIMITED || priceId === process.env.STRIPE_PRICE_UNLIMITED_YEARLY
               ? "UNLIMITED"
               : "FREE";
 
