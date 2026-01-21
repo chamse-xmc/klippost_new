@@ -452,6 +452,122 @@ export default function AnalysisPage() {
         </div>
       )}
 
+      {/* Retention */}
+      {analysis.retentionScore != null && (
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Retention</h4>
+          </div>
+          <div className="flex items-stretch">
+            <div className="flex-1 p-3 sm:p-4">
+              {analysis.retentionDropoffs && analysis.retentionDropoffs.length > 0 ? (
+                <div className="space-y-1.5">
+                  {analysis.retentionDropoffs.map((dropoff, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs sm:text-sm">
+                      <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-xs shrink-0">
+                        {formatTimestamp(dropoff.timestamp)}
+                      </span>
+                      <span className="text-muted-foreground">{dropoff.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs sm:text-sm text-muted-foreground">No significant drop-off points detected</p>
+              )}
+            </div>
+            <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+              <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                {analysis.retentionScore}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CTA Analysis */}
+      {analysis.ctaStrength != null && (
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Call to Action</h4>
+          </div>
+          <div className="flex items-stretch">
+            <div className="flex-1 p-3 sm:p-4">
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="font-semibold text-foreground text-sm sm:text-base">
+                  {ctaTypeLabels[analysis.ctaType || "NONE"] || analysis.ctaType || "None"}
+                </span>
+              </div>
+              {analysis.ctaFeedback && (
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysis.ctaFeedback}</p>
+              )}
+            </div>
+            <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+              <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                {analysis.ctaStrength}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Technical Quality */}
+      {(analysis.audioScore != null || analysis.visualScore != null) && (
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Technical Quality</h4>
+          </div>
+          <div className="divide-y divide-border">
+            {analysis.audioScore != null && (
+              <div className="flex items-stretch">
+                <div className="flex-1 p-3 sm:p-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-semibold text-foreground text-sm sm:text-base">Audio</span>
+                  </div>
+                  {analysis.audioFeedback && (
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysis.audioFeedback}</p>
+                  )}
+                </div>
+                <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+                  <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    {analysis.audioScore}
+                  </span>
+                </div>
+              </div>
+            )}
+            {analysis.visualScore != null && (
+              <div className="flex items-stretch">
+                <div className="flex-1 p-3 sm:p-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-semibold text-foreground text-sm sm:text-base">Visual</span>
+                  </div>
+                  {analysis.visualFeedback && (
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysis.visualFeedback}</p>
+                  )}
+                </div>
+                <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+                  <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    {analysis.visualScore}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Brand Value */}
+      {analysis.brandValue != null && (
+        <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4">
+          <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">Estimated Brand Value</h4>
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl sm:text-3xl font-black text-amber-400" style={{ fontFamily: "var(--font-nunito)" }}>
+              ${analysis.brandValue}
+            </span>
+            <span className="text-xs sm:text-sm text-muted-foreground">per sponsored post</span>
+          </div>
+        </div>
+      )}
+
       {/* Suggestions */}
       {analysis.suggestions && analysis.suggestions.length > 0 && (
         <div className="rounded-2xl bg-card border border-border overflow-hidden">
@@ -467,201 +583,6 @@ export default function AnalysisPage() {
                 <span className="text-sm text-foreground">{s.suggestion || s.description}</span>
               </div>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* Hook Type Analysis */}
-      {analysis.hookType && (
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Hook Type</h4>
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-400 font-medium text-sm">
-              {hookTypeLabels[analysis.hookType]?.label || analysis.hookType}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {hookTypeLabels[analysis.hookType]?.description}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Retention Timeline */}
-      {analysis.retentionScore != null && (
-        <div className="rounded-2xl bg-card border border-border overflow-hidden">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Retention</h4>
-            <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-              {analysis.retentionScore}
-            </span>
-          </div>
-          {analysis.retentionDropoffs && analysis.retentionDropoffs.length > 0 && (
-            <div className="p-4 space-y-2">
-              <p className="text-xs text-muted-foreground mb-2">Predicted drop-off points:</p>
-              {analysis.retentionDropoffs.map((dropoff, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-mono text-xs">
-                    {formatTimestamp(dropoff.timestamp)}
-                  </span>
-                  <span className="text-muted-foreground">{dropoff.reason}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CTA Analysis */}
-      {(analysis.ctaType || analysis.ctaStrength != null) && (
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Call to Action</h4>
-          <div className="flex items-center gap-4 mb-2">
-            {analysis.ctaType && (
-              <span className="px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-medium text-sm">
-                {ctaTypeLabels[analysis.ctaType] || analysis.ctaType}
-              </span>
-            )}
-            {analysis.ctaStrength != null && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Strength:</span>
-                <span className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                  {analysis.ctaStrength}
-                </span>
-              </div>
-            )}
-          </div>
-          {analysis.ctaFeedback && (
-            <p className="text-sm text-muted-foreground">{analysis.ctaFeedback}</p>
-          )}
-        </div>
-      )}
-
-      {/* Trend Alignment */}
-      {analysis.trendScore != null && (
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trend Alignment</h4>
-            <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-              {analysis.trendScore}
-            </span>
-          </div>
-          {analysis.trendMatches && analysis.trendMatches.length > 0 && (
-            <div className="mb-2">
-              <span className="text-xs text-muted-foreground">Matching trends:</span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {analysis.trendMatches.map((trend, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-xs">
-                    {trend}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          {analysis.trendSuggestions && analysis.trendSuggestions.length > 0 && (
-            <div>
-              <span className="text-xs text-muted-foreground">Try these trends:</span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {analysis.trendSuggestions.map((trend, i) => (
-                  <span key={i} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs">
-                    {trend}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Engagement Predictions */}
-      {(analysis.estimatedLikesMin != null || analysis.estimatedCommentsMin != null || analysis.estimatedSharesMin != null) && (
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement Forecast</h4>
-          <div className="grid grid-cols-3 gap-4">
-            {analysis.estimatedLikesMin != null && (
-              <div className="text-center">
-                <div className="text-2xl mb-1">❤️</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {analysis.estimatedLikesMin.toLocaleString()}-{(analysis.estimatedLikesMax || 0).toLocaleString()}
-                </div>
-                <div className="text-xs text-muted-foreground">Likes</div>
-              </div>
-            )}
-            {analysis.estimatedCommentsMin != null && (
-              <div className="text-center">
-                <div className="text-2xl mb-1">💬</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {analysis.estimatedCommentsMin.toLocaleString()}-{(analysis.estimatedCommentsMax || 0).toLocaleString()}
-                </div>
-                <div className="text-xs text-muted-foreground">Comments</div>
-              </div>
-            )}
-            {analysis.estimatedSharesMin != null && (
-              <div className="text-center">
-                <div className="text-2xl mb-1">🔄</div>
-                <div className="text-sm font-semibold text-foreground">
-                  {analysis.estimatedSharesMin.toLocaleString()}-{(analysis.estimatedSharesMax || 0).toLocaleString()}
-                </div>
-                <div className="text-xs text-muted-foreground">Shares</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Technical Quality */}
-      {(analysis.audioScore != null || analysis.visualScore != null) && (
-        <div className="rounded-2xl bg-card border border-border overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Technical Quality</h4>
-          </div>
-          <div className="divide-y divide-border">
-            {analysis.audioScore != null && (
-              <div className="flex items-stretch">
-                <div className="flex-1 p-4">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="font-semibold text-foreground">🎵 Audio</span>
-                  </div>
-                  {analysis.audioFeedback && (
-                    <p className="text-sm text-muted-foreground">{analysis.audioFeedback}</p>
-                  )}
-                </div>
-                <div className="w-20 flex items-center justify-center bg-muted/50">
-                  <span className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                    {analysis.audioScore}
-                  </span>
-                </div>
-              </div>
-            )}
-            {analysis.visualScore != null && (
-              <div className="flex items-stretch">
-                <div className="flex-1 p-4">
-                  <div className="flex items-baseline gap-2 mb-1">
-                    <span className="font-semibold text-foreground">🎨 Visual</span>
-                  </div>
-                  {analysis.visualFeedback && (
-                    <p className="text-sm text-muted-foreground">{analysis.visualFeedback}</p>
-                  )}
-                </div>
-                <div className="w-20 flex items-center justify-center bg-muted/50">
-                  <span className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                    {analysis.visualScore}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Brand Value */}
-      {analysis.brandValue != null && (
-        <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4">
-          <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">Estimated Brand Value</h4>
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-black text-amber-400" style={{ fontFamily: "var(--font-nunito)" }}>
-              ${analysis.brandValue}
-            </span>
-            <span className="text-sm text-muted-foreground">per sponsored post</span>
           </div>
         </div>
       )}
