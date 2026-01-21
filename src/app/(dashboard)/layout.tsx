@@ -38,7 +38,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-3xl items-center justify-between px-3 sm:px-4">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -63,8 +63,8 @@ export default function DashboardLayout({
       </header>
 
       {/* Main content */}
-      <main className="pt-16">
-        <div className="mx-auto max-w-3xl px-4 py-8">{children}</div>
+      <main className="pt-14 sm:pt-16">
+        <div className="mx-auto max-w-3xl px-3 sm:px-4 py-4 sm:py-8">{children}</div>
       </main>
     </div>
   );
