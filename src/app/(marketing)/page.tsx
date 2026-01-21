@@ -730,19 +730,16 @@ export default function LandingPage() {
                 step: "01",
                 title: "Upload your video",
                 description: "Drop your TikTok, Reel, or Short into the analyzer. We support all major formats.",
-                icon: "📤",
               },
               {
                 step: "02",
                 title: "AI analyzes everything",
                 description: "Our AI watches your video and scores hook, body, and ending. Takes seconds.",
-                icon: "🤖",
               },
               {
                 step: "03",
                 title: "Get actionable feedback",
                 description: "See your viral score, expected views, and specific tips to improve.",
-                icon: "📈",
               },
             ].map((item, i) => (
               <motion.div
@@ -753,7 +750,6 @@ export default function LandingPage() {
                 transition={{ delay: i * 0.1 }}
                 className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100"
               >
-                <div className="text-4xl mb-4">{item.icon}</div>
                 <div className="text-sm font-semibold text-primary mb-2">{item.step}</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
                 <p className="text-gray-600">{item.description}</p>
