@@ -58,7 +58,9 @@ export async function POST(request: Request) {
 
             console.log("Determined tier:", tier);
 
-            const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+            // Access current_period_end directly from subscription object
+            const periodEnd = subscription.current_period_end;
+            console.log("Period end timestamp:", periodEnd);
 
             console.log("Updating user in database...");
             await db.user.update({
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
                 subscription: tier,
                 stripeCustomerId: session.customer as string,
                 stripeSubId: session.subscription as string,
-                subExpiresAt: new Date(periodEnd * 1000),
+                subExpiresAt: periodEnd ? new Date(periodEnd * 1000) : null,
               },
             });
             console.log("User updated successfully");
@@ -127,13 +129,13 @@ export async function POST(request: Request) {
               ? "UNLIMITED"
               : "FREE";
 
-          const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+          const periodEnd = subscription.current_period_end;
 
           await db.user.update({
             where: { id: userId },
             data: {
               subscription: tier,
-              subExpiresAt: new Date(periodEnd * 1000),
+              subExpiresAt: periodEnd ? new Date(periodEnd * 1000) : null,
             },
           });
         }
