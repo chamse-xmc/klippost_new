@@ -98,6 +98,7 @@ export default function AdminPage() {
       setIsAuthenticated(true);
       setLastRefresh(new Date());
       sessionStorage.setItem("admin_password", pwd);
+      localStorage.setItem("is_admin", "true"); // Exclude from tracking
     } catch {
       setError("Failed to connect");
     } finally {

@@ -7,6 +7,11 @@ export function PageTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Skip tracking if admin (flag set on admin login)
+    if (localStorage.getItem("is_admin") === "true") {
+      return;
+    }
+
     // Track page view
     fetch("/api/track", {
       method: "POST",
