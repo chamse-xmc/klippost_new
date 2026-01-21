@@ -40,7 +40,7 @@ export default function DashboardLayout({
       <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="mx-auto flex h-14 sm:h-16 max-w-3xl items-center justify-between px-3 sm:px-4">
           {/* Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2 group">
+          <Link href="/app" className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center group-hover:scale-105 transition-transform">
               <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M8 5.14v14l11-7-11-7z" />

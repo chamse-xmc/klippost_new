@@ -26,7 +26,7 @@ export default function OnboardingPotentialPage() {
         saveOnboardingData();
       } else {
         // No onboarding data, just go to dashboard
-        router.push("/dashboard");
+        router.push("/app");
       }
     }
   }, [status, session, followerRange, goals, challenges]);
@@ -39,16 +39,16 @@ export default function OnboardingPotentialPage() {
         body: JSON.stringify({ followerRange, heardFrom, goals, challenges }),
       });
       reset();
-      router.push("/dashboard");
+      router.push("/app");
     } catch (error) {
       console.error("Failed to save onboarding data:", error);
-      router.push("/dashboard");
+      router.push("/app");
     }
   };
 
   const handleSignIn = async (provider: "google" | "facebook") => {
     setIsLoading(true);
-    await signIn(provider, { callbackUrl: "/dashboard" });
+    await signIn(provider, { callbackUrl: "/app" });
   };
 
   const handleBack = () => {

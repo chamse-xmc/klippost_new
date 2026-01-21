@@ -24,7 +24,7 @@ export default function OnboardingLayout({
   // Redirect logged-in users to dashboard
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.replace("/app");
     }
   }, [status, router]);
 

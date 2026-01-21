@@ -306,7 +306,7 @@ export default function AnalysisPage() {
       <div className="text-center py-20">
         <p className="text-muted-foreground mb-4">Analysis not found</p>
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/app")}
           className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-medium"
         >
           Back to Dashboard
@@ -321,7 +321,7 @@ export default function AnalysisPage() {
 
       {/* Back button */}
       <button
-        onClick={() => router.push("/dashboard")}
+        onClick={() => router.push("/app")}
         className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -668,7 +668,7 @@ export default function AnalysisPage() {
 
       {/* Back to dashboard */}
       <button
-        onClick={() => router.push("/dashboard")}
+        onClick={() => router.push("/app")}
         className="w-full py-4 px-6 rounded-xl font-semibold text-primary-foreground bg-primary hover:opacity-90 transition-all"
       >
         Analyze Another Video

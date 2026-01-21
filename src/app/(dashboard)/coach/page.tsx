@@ -83,7 +83,7 @@ export default function CoachPage() {
           <p className="text-sm text-muted-foreground">Get personalized advice based on your video performance</p>
         </div>
         <Link
-          href="/dashboard"
+          href="/app"
           className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

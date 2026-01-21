@@ -573,7 +573,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, returnUrl: "/dashboard?upgraded=true" }),
+        body: JSON.stringify({ plan, returnUrl: "/app?upgraded=true" }),
       });
       if (!res.ok) {
         const error = await res.json();
@@ -627,7 +627,7 @@ export default function DashboardPage() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("upgraded") === "true") {
       // Clear the URL param
-      window.history.replaceState({}, "", "/dashboard");
+      window.history.replaceState({}, "", "/app");
 
       // Check for pending analysis
       const pendingData = localStorage.getItem("pendingAnalysis");
