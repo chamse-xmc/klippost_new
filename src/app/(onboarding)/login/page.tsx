@@ -8,7 +8,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
-  const [testEmail, setTestEmail] = useState("test@example.com");
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -21,14 +20,6 @@ export default function LoginPage() {
     await signIn(provider, { callbackUrl: "/dashboard" });
   };
 
-  const handleTestLogin = async () => {
-    setIsLoading(true);
-    await signIn("credentials", {
-      email: testEmail,
-      callbackUrl: "/dashboard"
-    });
-  };
-
   if (status === "loading" || status === "authenticated") {
     return (
       <div className="flex items-center justify-center py-20">
@@ -39,6 +30,18 @@ export default function LoginPage() {
 
   return (
     <div className="space-y-6">
+      {/* Logo */}
+      <div className="flex justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+            <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5.14v14l11-7-11-7z" />
+            </svg>
+          </div>
+          <span className="font-bold text-xl text-foreground tracking-tight">klippost</span>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="text-center space-y-3">
         <h1 className="text-2xl font-bold text-foreground tracking-tight">
@@ -56,38 +59,6 @@ export default function LoginPage() {
         </div>
       ) : (
         <div className="space-y-3 animate-slide-up">
-          {/* Test Login */}
-          <div className="rounded-xl border-2 border-dashed border-border bg-muted p-4">
-            <div className="text-center text-xs font-semibold text-muted-foreground mb-3">
-              Dev Mode - Quick Login
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                placeholder="test@example.com"
-                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:border-primary"
-              />
-              <button
-                onClick={handleTestLogin}
-                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
-              >
-                Go
-              </button>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-background px-4 text-xs text-muted-foreground uppercase tracking-wider">or continue with</span>
-            </div>
-          </div>
-
           {/* Social buttons */}
           <button
             onClick={() => handleSignIn("google")}

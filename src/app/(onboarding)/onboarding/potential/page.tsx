@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { useOnboardingStore } from "@/lib/onboarding-store";
 import { calculatePotential } from "@/services/potential-calculator";
-import { cn } from "@/lib/utils";
 
 export default function OnboardingPotentialPage() {
   const router = useRouter();
@@ -13,7 +12,6 @@ export default function OnboardingPotentialPage() {
   const { followerRange, heardFrom, goals, challenges, reset } = useOnboardingStore();
   const [potential, setPotential] = useState<ReturnType<typeof calculatePotential> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [testEmail, setTestEmail] = useState("test@example.com");
 
   useEffect(() => {
     if (followerRange && goals.length > 0 && challenges.length > 0) {
@@ -51,14 +49,6 @@ export default function OnboardingPotentialPage() {
   const handleSignIn = async (provider: "google" | "facebook") => {
     setIsLoading(true);
     await signIn(provider, { callbackUrl: "/dashboard" });
-  };
-
-  const handleTestLogin = async () => {
-    setIsLoading(true);
-    await signIn("credentials", {
-      email: testEmail,
-      callbackUrl: "/dashboard"
-    });
   };
 
   const handleBack = () => {
@@ -144,38 +134,6 @@ export default function OnboardingPotentialPage() {
         </div>
       ) : (
         <div className="space-y-3 animate-slide-up" style={{ animationDelay: "0.2s", animationFillMode: "forwards", opacity: 0 }}>
-          {/* Test Login */}
-          <div className="rounded-xl border-2 border-dashed border-border bg-muted p-4">
-            <div className="text-center text-xs font-semibold text-muted-foreground mb-3">
-              Dev Mode - Quick Login
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                placeholder="test@example.com"
-                className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:border-primary"
-              />
-              <button
-                onClick={handleTestLogin}
-                className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
-              >
-                Go
-              </button>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="relative py-2">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="bg-background px-4 text-xs text-muted-foreground uppercase tracking-wider">or continue with</span>
-            </div>
-          </div>
-
           {/* Social buttons */}
           <button
             onClick={() => handleSignIn("google")}
