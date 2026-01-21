@@ -1023,12 +1023,12 @@ export default function DashboardPage() {
                   style={{ boxShadow: "0 0 12px 4px rgba(255,255,255,0.8), 0 0 24px 8px rgba(255,255,255,0.4)" }}
                 />
                 {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/5" />
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-primary/10" />
                 {/* Corner brackets */}
-                <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-white/70" />
-                <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-white/70" />
-                <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-white/70" />
-                <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-white/70" />
+                <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-primary" />
+                <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-primary" />
+                <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-primary" />
+                <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-primary" />
               </div>
             )}
 
