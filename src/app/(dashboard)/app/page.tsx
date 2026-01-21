@@ -565,7 +565,6 @@ export default function DashboardPage() {
           uploadedData,
           platform,
           mode,
-          videoPreviewUrl,
           fileName: selectedFile?.name,
         }));
       }
@@ -633,14 +632,15 @@ export default function DashboardPage() {
       const pendingData = localStorage.getItem("pendingAnalysis");
       if (pendingData) {
         try {
-          const { uploadedData: savedUpload, platform: savedPlatform, mode: savedMode, videoPreviewUrl: savedPreview, fileName } = JSON.parse(pendingData);
+          const { uploadedData: savedUpload, platform: savedPlatform, mode: savedMode, fileName } = JSON.parse(pendingData);
           localStorage.removeItem("pendingAnalysis");
 
           // Restore state and trigger analysis
+          // Use the actual uploaded video URL instead of blob URL (which is invalid after navigation)
           setUploadedData(savedUpload);
           setPlatform(savedPlatform);
           setMode(savedMode);
-          setVideoPreviewUrl(savedPreview);
+          setVideoPreviewUrl(savedUpload.url); // Use uploaded URL, not blob URL
           setSelectedFile({ name: fileName } as File);
 
           // Auto-trigger analysis after a short delay
