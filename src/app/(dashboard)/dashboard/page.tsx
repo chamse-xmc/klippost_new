@@ -127,22 +127,22 @@ function ScoreDisplay({ score, onCelebrate }: { score: number; onCelebrate?: () 
     <div className="text-center relative">
       <div
         className={cn(
-          "text-8xl font-extrabold text-white mb-2 relative",
+          "text-6xl sm:text-8xl font-extrabold text-white mb-2 relative",
           showBounce && "animate-celebrate-bounce"
         )}
         style={{ fontFamily: "var(--font-nunito)", fontVariantNumeric: "tabular-nums" }}
       >
         {displayScore}
       </div>
-      <div className="text-white text-lg font-semibold">
+      <div className="text-white text-base sm:text-lg font-semibold">
         {getScoreInfo(displayScore).label}
         {isExcellent && " 🎉"}
       </div>
-      <div className="text-white/70 text-sm mt-1">
+      <div className="text-white/70 text-xs sm:text-sm mt-1">
         {getScoreInfo(displayScore).message}
       </div>
       <div className="mt-4 flex justify-center">
-        <div className="w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
+        <div className="w-40 sm:w-48 h-1.5 bg-white/20 rounded-full overflow-hidden">
           <div
             className="h-full bg-white rounded-full"
             style={{
@@ -329,98 +329,6 @@ interface ImprovementStats {
     ending: { first: number; latest: number; change: number };
   };
 }
-
-// Mock videos for testing score colors
-const MOCK_VIDEOS: VideoData[] = [
-  {
-    id: "mock-1",
-    title: "Excellent Hook Example",
-    fileName: "viral_dance_video.mp4",
-    platform: "TIKTOK",
-    thumbnailUrl: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-    analysis: {
-      id: "analysis-1",
-      viralScore: 92,
-      hookScore: 95,
-      bodyScore: 88,
-      endingScore: 90,
-      viewsMin: 500000,
-      viewsMax: 1200000,
-      summary: "Exceptional content with viral potential. Strong hook that immediately captures attention.",
-      hookFeedback: "The first 2 seconds are incredibly engaging - the unexpected visual immediately grabs attention.",
-      bodyFeedback: "Content maintains momentum well with good pacing and valuable information throughout.",
-      endingFeedback: "Strong call-to-action that encourages engagement and follows.",
-      suggestions: [],
-    },
-  },
-  {
-    id: "mock-2",
-    title: "Good Performance Video",
-    fileName: "cooking_tutorial.mp4",
-    platform: "INSTAGRAM_REELS",
-    thumbnailUrl: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-    analysis: {
-      id: "analysis-2",
-      viralScore: 74,
-      hookScore: 78,
-      bodyScore: 72,
-      endingScore: 68,
-      viewsMin: 50000,
-      viewsMax: 150000,
-      summary: "Solid content with good engagement potential. Some room for improvement in the ending.",
-      hookFeedback: "Good opening that establishes the topic quickly, but could be more visually striking.",
-      bodyFeedback: "Clear explanations and good pacing. Consider adding more visual variety.",
-      endingFeedback: "The ending feels slightly abrupt. Add a stronger CTA to boost engagement.",
-      suggestions: [],
-    },
-  },
-  {
-    id: "mock-3",
-    title: "Average Content Example",
-    fileName: "product_review.mp4",
-    platform: "YOUTUBE_SHORTS",
-    thumbnailUrl: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 days ago
-    analysis: {
-      id: "analysis-3",
-      viralScore: 52,
-      hookScore: 45,
-      bodyScore: 58,
-      endingScore: 55,
-      viewsMin: 5000,
-      viewsMax: 20000,
-      summary: "Content has potential but needs work on the hook to improve viewer retention.",
-      hookFeedback: "The opening is too slow. Viewers may scroll away before the value is apparent.",
-      bodyFeedback: "Good information but delivery could be more dynamic. Try varying your energy.",
-      endingFeedback: "Decent wrap-up but missing a compelling reason for viewers to engage.",
-      suggestions: [],
-    },
-  },
-  {
-    id: "mock-4",
-    title: "Needs Improvement",
-    fileName: "random_vlog.mp4",
-    platform: "TIKTOK",
-    thumbnailUrl: null,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 days ago
-    analysis: {
-      id: "analysis-4",
-      viralScore: 28,
-      hookScore: 22,
-      bodyScore: 35,
-      endingScore: 30,
-      viewsMin: 500,
-      viewsMax: 2000,
-      summary: "Significant improvements needed. Focus on creating a stronger hook and clearer value proposition.",
-      hookFeedback: "No clear hook - the video starts without grabbing attention. This is critical to fix.",
-      bodyFeedback: "Content lacks focus and clear direction. Define your main message before filming.",
-      endingFeedback: "No call-to-action or reason for viewers to engage further.",
-      suggestions: [],
-    },
-  },
-];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -826,9 +734,9 @@ export default function DashboardPage() {
 
       {/* Stats Badges Row */}
       {!selectedFile && (
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           {/* Creator Rank Badge */}
-          <div className={cn("relative group flex-1", !videosData?.improvementStats && "flex-none mx-auto")}>
+          <div className={cn("relative group flex-1", !videosData?.improvementStats && "sm:flex-none sm:mx-auto")}>
             {/* Outer glow ring */}
             <div
               className="absolute inset-0 rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"
@@ -844,11 +752,11 @@ export default function DashboardPage() {
             />
 
             {/* Main badge container */}
-            <div className="relative h-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
+            <div className="relative h-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
               {/* Score circle */}
               <div className="relative shrink-0">
                 {/* Progress ring SVG */}
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                <svg className="w-16 h-16 sm:w-20 sm:h-20 -rotate-90" viewBox="0 0 100 100">
                   {/* Background circle */}
                   <circle
                     cx="50"
@@ -901,7 +809,7 @@ export default function DashboardPage() {
                 {/* Score number in center */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span
-                    className="text-3xl font-black text-foreground"
+                    className="text-2xl sm:text-3xl font-black text-foreground"
                     style={{ fontFamily: "var(--font-nunito)", fontVariantNumeric: "tabular-nums" }}
                   >
                     {overallScore}
@@ -910,9 +818,9 @@ export default function DashboardPage() {
               </div>
 
               {/* Title and label */}
-              <div className="flex flex-col">
+              <div className="flex flex-col min-w-0">
                 <span
-                  className="text-lg font-bold text-foreground tracking-tight"
+                  className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate"
                   style={{ fontFamily: "var(--font-nunito)" }}
                 >
                   {creatorInfo.title}
@@ -938,11 +846,11 @@ export default function DashboardPage() {
               />
 
               {/* Main badge container */}
-              <div className="relative h-full flex items-center gap-4 px-6 py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
+              <div className="relative h-full flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 rounded-2xl bg-card border border-border backdrop-blur-sm">
                 {/* Progress circle */}
                 <div className="relative shrink-0">
                   {/* Progress ring SVG */}
-                  <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
+                  <svg className="w-16 h-16 sm:w-20 sm:h-20 -rotate-90" viewBox="0 0 100 100">
                     {/* Background circle */}
                     <circle
                       cx="50"
@@ -986,7 +894,7 @@ export default function DashboardPage() {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span
                       className={cn(
-                        "text-2xl font-black",
+                        "text-xl sm:text-2xl font-black",
                         videosData.improvementStats.improvementPercent >= 0 ? "text-green-500" : "text-red-500"
                       )}
                       style={{ fontFamily: "var(--font-nunito)", fontVariantNumeric: "tabular-nums" }}
@@ -998,9 +906,9 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Title and label */}
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0">
                   <span
-                    className="text-lg font-bold text-foreground tracking-tight"
+                    className="text-base sm:text-lg font-bold text-foreground tracking-tight truncate"
                     style={{ fontFamily: "var(--font-nunito)" }}
                   >
                     {videosData.improvementStats.trend === "improving" ? "Improving" :
@@ -1111,16 +1019,16 @@ export default function DashboardPage() {
                 <video src={videoPreviewUrl} className="w-full aspect-[9/16] object-cover" muted />
                 {/* Scanning line */}
                 <div
-                  className="absolute left-0 right-0 h-1 bg-primary animate-scan"
-                  style={{ boxShadow: "0 0 20px 8px var(--primary), 0 0 40px 16px var(--primary)" }}
+                  className="absolute left-0 right-0 h-0.5 bg-white animate-scan"
+                  style={{ boxShadow: "0 0 12px 4px rgba(255,255,255,0.8), 0 0 24px 8px rgba(255,255,255,0.4)" }}
                 />
                 {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-primary/10" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-white/5" />
                 {/* Corner brackets */}
-                <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-primary" />
-                <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-primary" />
-                <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-primary" />
-                <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-primary" />
+                <div className="absolute top-3 left-3 w-6 h-6 border-l-2 border-t-2 border-white/70" />
+                <div className="absolute top-3 right-3 w-6 h-6 border-r-2 border-t-2 border-white/70" />
+                <div className="absolute bottom-3 left-3 w-6 h-6 border-l-2 border-b-2 border-white/70" />
+                <div className="absolute bottom-3 right-3 w-6 h-6 border-r-2 border-b-2 border-white/70" />
               </div>
             )}
 
@@ -1166,10 +1074,10 @@ export default function DashboardPage() {
               backgroundSize: '24px 24px'
             }} />
 
-            <div className="relative p-8">
+            <div className="relative p-6 sm:p-8">
               <ScoreDisplay score={analysisResult.analysis.viralScore} onCelebrate={triggerCelebration} />
-              <div className="mt-6 text-center">
-                <span className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 text-sm text-white font-medium">
+              <div className="mt-4 sm:mt-6 text-center">
+                <span className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white font-medium">
                   {(analysisResult.analysis.expectedViewsMin ?? analysisResult.analysis.viewsMin ?? 0).toLocaleString()} - {(analysisResult.analysis.expectedViewsMax ?? analysisResult.analysis.viewsMax ?? 0).toLocaleString()} expected views
                 </span>
               </div>
@@ -1196,18 +1104,18 @@ export default function DashboardPage() {
                 { label: "Ending", desc: "Call to action", score: analysisResult.analysis.endingScore, feedback: analysisResult.analysis.endingFeedback },
               ].map(({ label, desc, score, feedback }, idx) => (
                 <div key={label} className="flex items-stretch animate-slide-up" style={{ animationDelay: `${idx * 0.1}s` }}>
-                  <div className="flex-1 p-4">
+                  <div className="flex-1 p-3 sm:p-4">
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className="font-semibold text-foreground">{label}</span>
-                      <span className="text-xs text-muted-foreground">{desc}</span>
+                      <span className="font-semibold text-foreground text-sm sm:text-base">{label}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline">{desc}</span>
                     </div>
                     {feedback && (
-                      <p className="text-sm text-muted-foreground leading-relaxed">{feedback}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">{feedback}</p>
                     )}
                   </div>
-                  <div className="w-20 flex items-center justify-center bg-muted/50">
+                  <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
                     <span
-                      className="text-3xl font-black text-foreground"
+                      className="text-2xl sm:text-3xl font-black text-foreground"
                       style={{ fontFamily: "var(--font-nunito)" }}
                     >
                       {score}
@@ -1369,11 +1277,11 @@ export default function DashboardPage() {
           {(analysisResult.analysis.estimatedLikesMin != null || analysisResult.analysis.estimatedCommentsMin != null || analysisResult.analysis.estimatedSharesMin != null) && (
             <div className="rounded-2xl bg-card border border-border p-4">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement Forecast</h4>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {analysisResult.analysis.estimatedLikesMin != null && (
                   <div className="text-center">
-                    <div className="text-2xl mb-1">❤️</div>
-                    <div className="text-sm font-semibold text-foreground">
+                    <div className="text-xl sm:text-2xl mb-1">❤️</div>
+                    <div className="text-xs sm:text-sm font-semibold text-foreground">
                       {analysisResult.analysis.estimatedLikesMin.toLocaleString()}-{(analysisResult.analysis.estimatedLikesMax || 0).toLocaleString()}
                     </div>
                     <div className="text-xs text-muted-foreground">Likes</div>
@@ -1381,8 +1289,8 @@ export default function DashboardPage() {
                 )}
                 {analysisResult.analysis.estimatedCommentsMin != null && (
                   <div className="text-center">
-                    <div className="text-2xl mb-1">💬</div>
-                    <div className="text-sm font-semibold text-foreground">
+                    <div className="text-xl sm:text-2xl mb-1">💬</div>
+                    <div className="text-xs sm:text-sm font-semibold text-foreground">
                       {analysisResult.analysis.estimatedCommentsMin.toLocaleString()}-{(analysisResult.analysis.estimatedCommentsMax || 0).toLocaleString()}
                     </div>
                     <div className="text-xs text-muted-foreground">Comments</div>
@@ -1390,8 +1298,8 @@ export default function DashboardPage() {
                 )}
                 {analysisResult.analysis.estimatedSharesMin != null && (
                   <div className="text-center">
-                    <div className="text-2xl mb-1">🔄</div>
-                    <div className="text-sm font-semibold text-foreground">
+                    <div className="text-xl sm:text-2xl mb-1">🔄</div>
+                    <div className="text-xs sm:text-sm font-semibold text-foreground">
                       {analysisResult.analysis.estimatedSharesMin.toLocaleString()}-{(analysisResult.analysis.estimatedSharesMax || 0).toLocaleString()}
                     </div>
                     <div className="text-xs text-muted-foreground">Shares</div>
@@ -1410,16 +1318,16 @@ export default function DashboardPage() {
               <div className="divide-y divide-border">
                 {analysisResult.analysis.audioScore != null && (
                   <div className="flex items-stretch">
-                    <div className="flex-1 p-4">
+                    <div className="flex-1 p-3 sm:p-4">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-foreground">🎵 Audio</span>
+                        <span className="font-semibold text-foreground text-sm sm:text-base">🎵 Audio</span>
                       </div>
                       {analysisResult.analysis.audioFeedback && (
-                        <p className="text-sm text-muted-foreground">{analysisResult.analysis.audioFeedback}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysisResult.analysis.audioFeedback}</p>
                       )}
                     </div>
-                    <div className="w-20 flex items-center justify-center bg-muted/50">
-                      <span className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+                      <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
                         {analysisResult.analysis.audioScore}
                       </span>
                     </div>
@@ -1427,16 +1335,16 @@ export default function DashboardPage() {
                 )}
                 {analysisResult.analysis.visualScore != null && (
                   <div className="flex items-stretch">
-                    <div className="flex-1 p-4">
+                    <div className="flex-1 p-3 sm:p-4">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-foreground">🎨 Visual</span>
+                        <span className="font-semibold text-foreground text-sm sm:text-base">🎨 Visual</span>
                       </div>
                       {analysisResult.analysis.visualFeedback && (
-                        <p className="text-sm text-muted-foreground">{analysisResult.analysis.visualFeedback}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysisResult.analysis.visualFeedback}</p>
                       )}
                     </div>
-                    <div className="w-20 flex items-center justify-center bg-muted/50">
-                      <span className="text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+                      <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
                         {analysisResult.analysis.visualScore}
                       </span>
                     </div>
@@ -1451,10 +1359,10 @@ export default function DashboardPage() {
             <div className="rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4">
               <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">Estimated Brand Value</h4>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-amber-400" style={{ fontFamily: "var(--font-nunito)" }}>
+                <span className="text-2xl sm:text-3xl font-black text-amber-400" style={{ fontFamily: "var(--font-nunito)" }}>
                   ${analysisResult.analysis.brandValue}
                 </span>
-                <span className="text-sm text-muted-foreground">per sponsored post</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">per sponsored post</span>
               </div>
             </div>
           )}
@@ -1700,10 +1608,9 @@ export default function DashboardPage() {
       {/* History */}
       {!selectedFile && (
         <div>
-          <h2 className="text-lg font-bold text-foreground mb-4">Recent Analyses</h2>
-          <div className="space-y-3">
-            {/* Show mock videos for testing, then real videos */}
-            {[...MOCK_VIDEOS, ...(videosData?.videos || [])].map((video, i) => (
+          <h2 className="text-base sm:text-lg font-bold text-foreground mb-3 sm:mb-4">Recent Analyses</h2>
+          <div className="space-y-2 sm:space-y-3">
+            {(videosData?.videos || []).map((video, i) => (
               <button
                 key={video.id}
                 onClick={() => {
@@ -1716,21 +1623,21 @@ export default function DashboardPage() {
               >
                 <div className="flex items-stretch">
                   {/* Thumbnail - edge to edge on left */}
-                  <div className="w-20 shrink-0 bg-muted overflow-hidden">
+                  <div className="w-16 sm:w-20 shrink-0 bg-muted overflow-hidden">
                     {video.thumbnailUrl ? (
                       <img src={video.thumbnailUrl} alt="" className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <svg className="w-6 h-6 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
                         </svg>
                       </div>
                     )}
                   </div>
                   {/* Content */}
-                  <div className="flex-1 min-w-0 flex items-center gap-4 px-4">
+                  <div className="flex-1 min-w-0 flex items-center gap-2 sm:gap-4 px-3 sm:px-4">
                     <div className="flex-1 min-w-0">
-                      <p className="truncate font-medium text-foreground">{video.title || video.fileName}</p>
+                      <p className="truncate font-medium text-foreground text-sm sm:text-base">{video.title || video.fileName}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {video.platform.replace("_", " ")} • {new Date(video.createdAt).toLocaleDateString()}
                       </p>
@@ -1738,13 +1645,13 @@ export default function DashboardPage() {
                     {/* Score */}
                     {video.analysis && (
                       <div
-                        className="text-2xl font-bold text-foreground"
+                        className="text-xl sm:text-2xl font-bold text-foreground"
                         style={{ fontFamily: "var(--font-nunito)" }}
                       >
                         {video.analysis.viralScore}
                       </div>
                     )}
-                    <svg className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                   </div>

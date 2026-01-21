@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { analyzeVideo } from "@/services/video-analyzer";
 import { updateUserScore } from "@/services/user-score";
+import { checkRateLimit, getClientIdentifier, RATE_LIMITS } from "@/lib/rate-limit";
 import type { AnalysisMode, SuggestionCategory, Priority } from "@prisma/client";
 
 export async function POST(request: Request) {
@@ -11,6 +12,23 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit by user ID for analysis (expensive AI calls)
+    const identifier = getClientIdentifier(request, session.user.id);
+    const rateLimit = checkRateLimit(identifier, RATE_LIMITS.analysis);
+
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: `Rate limit exceeded. Try again in ${rateLimit.resetIn} seconds.` },
+        {
+          status: 429,
+          headers: {
+            "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+            "X-RateLimit-Reset": rateLimit.resetIn.toString(),
+          }
+        }
+      );
     }
 
     const body = await request.json();
@@ -124,7 +142,7 @@ export async function POST(request: Request) {
               priority: s.priority as Priority,
               title: s.title,
               description: s.description,
-              timestamp: s.timestamp,
+              timestamp: s.timestamp != null ? Math.round(Number(s.timestamp)) || null : null,
             })),
           },
         },

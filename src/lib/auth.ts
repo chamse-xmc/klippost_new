@@ -2,44 +2,12 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import FacebookProvider from "next-auth/providers/facebook";
-import CredentialsProvider from "next-auth/providers/credentials";
 import { cookies } from "next/headers";
 import { db } from "./db";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),
   providers: [
-    // Test credentials provider - for development only
-    CredentialsProvider({
-      name: "Test Login",
-      credentials: {
-        email: { label: "Email", type: "email", placeholder: "test@example.com" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
-
-        // Find or create user
-        let user = await db.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user) {
-          user = await db.user.create({
-            data: {
-              email: credentials.email,
-              name: credentials.email.split("@")[0],
-            },
-          });
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
-      },
-    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "not-configured",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "not-configured",
@@ -51,6 +19,10 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+  },
+  jwt: {
+    maxAge: 7 * 24 * 60 * 60, // 7 days
   },
   events: {
     async createUser({ user }) {
@@ -85,13 +57,40 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
+    async jwt({ token, user, account }) {
+      // On initial sign in, store user ID and mark as OAuth verified
+      if (user && account) {
         token.id = user.id;
+        token.provider = account.provider;
+        token.oauthVerified = true;
       }
+
+      // If token doesn't have oauthVerified flag (old credentials sessions), invalidate
+      if (token.id && !token.oauthVerified) {
+        // Check if user has OAuth account (one-time check)
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id as string },
+          include: { accounts: { select: { provider: true } } },
+        });
+
+        if (!dbUser || dbUser.accounts.length === 0) {
+          // Invalidate old credentials-based sessions by marking as invalid
+          token.invalidated = true;
+          return token;
+        }
+
+        // User has OAuth account, mark as verified
+        token.oauthVerified = true;
+      }
+
       return token;
     },
     async session({ session, token }) {
+      // If token was invalidated, return empty session
+      if (token.invalidated || !token.id) {
+        return { ...session, user: undefined };
+      }
+
       if (session.user) {
         session.user.id = token.id as string;
       }
