@@ -37,10 +37,11 @@ interface Stats {
   }[];
   recentVisitors: {
     id: string;
-    path: string;
     country: string | null;
     city: string | null;
-    createdAt: string;
+    firstSeen: string;
+    pageCount: number;
+    pages: { path: string; time: string }[];
   }[];
 }
 
@@ -61,6 +62,7 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [stats, setStats] = useState<Stats | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [expandedVisitor, setExpandedVisitor] = useState<string | null>(null);
 
   // Check if password is stored in session
   useEffect(() => {
@@ -318,36 +320,58 @@ export default function AdminPage() {
               <div className="p-5 border-b border-white/10">
                 <h2 className="text-lg font-semibold">Recent Visitors</h2>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10 text-left text-gray-400">
-                      <th className="px-5 py-3 font-medium">Location</th>
-                      <th className="px-5 py-3 font-medium">Page</th>
-                      <th className="px-5 py-3 font-medium">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {stats.recentVisitors.map((visitor) => (
-                      <tr key={visitor.id} className="hover:bg-white/5">
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{countryToFlag(visitor.country || "")}</span>
-                            <span>
-                              {visitor.city && visitor.country
-                                ? `${visitor.city}, ${visitor.country}`
-                                : visitor.country || "Unknown"}
+              <div className="divide-y divide-white/5">
+                {stats.recentVisitors.map((visitor) => (
+                  <div key={visitor.id}>
+                    <button
+                      onClick={() => setExpandedVisitor(expandedVisitor === visitor.id ? null : visitor.id)}
+                      className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{countryToFlag(visitor.country || "")}</span>
+                        <div>
+                          <span className="text-sm">
+                            {visitor.city && visitor.country
+                              ? `${visitor.city}, ${visitor.country}`
+                              : visitor.country || "Unknown"}
+                          </span>
+                          <span className="text-gray-500 text-xs ml-2">
+                            {visitor.pageCount} page{visitor.pageCount !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-400 text-sm">
+                          {new Date(visitor.firstSeen).toLocaleTimeString()}
+                        </span>
+                        <svg
+                          className={`w-4 h-4 text-gray-400 transition-transform ${expandedVisitor === visitor.id ? "rotate-180" : ""}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </button>
+                    {expandedVisitor === visitor.id && (
+                      <div className="px-5 pb-3 pl-12 space-y-1">
+                        {visitor.pages.map((page, i) => (
+                          <div key={i} className="flex items-center justify-between text-sm py-1">
+                            <span className="font-mono text-gray-400">{page.path}</span>
+                            <span className="text-gray-500 text-xs">
+                              {new Date(page.time).toLocaleTimeString()}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-5 py-3 font-mono text-gray-400">{visitor.path}</td>
-                        <td className="px-5 py-3 text-gray-400">
-                          {new Date(visitor.createdAt).toLocaleTimeString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {stats.recentVisitors.length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-6">No visitors yet</p>
+                )}
               </div>
             </div>
 

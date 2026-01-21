@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       }),
       // Recent visitors with location (exclude admin's location)
       db.pageView.findMany({
-        take: 20,
+        take: 100, // Get more to group by IP
         where: {
           NOT: [
             { city: "Grenå" },
@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
           path: true,
           country: true,
           city: true,
+          ip: true,
           createdAt: true,
         },
       }),
@@ -148,13 +149,48 @@ export async function POST(req: NextRequest) {
         country: c.country,
         views: c._count.country,
       })),
-      recentVisitors: recentVisitors.map((v) => ({
-        id: v.id,
-        path: v.path,
-        country: v.country,
-        city: v.city,
-        createdAt: v.createdAt,
-      })),
+      // Group visitors by IP
+      recentVisitors: (() => {
+        const visitorMap = new Map<string, {
+          ip: string;
+          country: string | null;
+          city: string | null;
+          firstSeen: Date;
+          pages: { path: string; time: Date }[];
+        }>();
+
+        for (const v of recentVisitors) {
+          const key = v.ip || v.id; // Use IP as key, fallback to id
+          if (!visitorMap.has(key)) {
+            visitorMap.set(key, {
+              ip: v.ip || "unknown",
+              country: v.country,
+              city: v.city,
+              firstSeen: v.createdAt,
+              pages: [],
+            });
+          }
+          const visitor = visitorMap.get(key)!;
+          visitor.pages.push({ path: v.path, time: v.createdAt });
+          // Update firstSeen if this is earlier
+          if (v.createdAt < visitor.firstSeen) {
+            visitor.firstSeen = v.createdAt;
+          }
+        }
+
+        // Convert to array, sort by most recent, take top 20
+        return Array.from(visitorMap.values())
+          .sort((a, b) => new Date(b.pages[0]?.time || b.firstSeen).getTime() - new Date(a.pages[0]?.time || a.firstSeen).getTime())
+          .slice(0, 20)
+          .map((v, i) => ({
+            id: `visitor-${i}`,
+            country: v.country,
+            city: v.city,
+            firstSeen: v.firstSeen,
+            pageCount: v.pages.length,
+            pages: v.pages.slice(0, 10), // Limit pages per visitor
+          }));
+      })(),
     });
   } catch (error) {
     console.error("Admin stats error:", error);
