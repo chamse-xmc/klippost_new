@@ -1,10 +1,43 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Play, Sparkles, TrendingUp, Target, Zap, Check, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// Scroll animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+};
+
+const fadeInLeft = {
+  hidden: { opacity: 0, x: -40 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: 40 }
+};
+
+const fadeInRight = {
+  hidden: { opacity: 0, x: 40 },
+  visible: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -40 }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+  }
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.95 }
+};
 
 // Animated counter component
 function Counter({ from, to, duration = 2000 }: { from: number; to: number; duration?: number }) {
@@ -544,36 +577,57 @@ function ScoreDemo() {
       ([entry]) => {
         if (entry.isIntersecting && !hasPlayed.current) {
           hasPlayed.current = true;
-          // Staggered animation
           setTimeout(() => setPhase(1), 300);
           setTimeout(() => setPhase(2), 800);
           setTimeout(() => setPhase(3), 1300);
           setTimeout(() => setPhase(4), 1800);
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.3 }
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section ref={containerRef} className="py-24 px-4 sm:px-6 bg-white">
+    <section ref={containerRef} className="py-24 px-4 sm:px-6 bg-white overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left - Text */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            variants={fadeInLeft}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+            <motion.h2
+              className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6"
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+              transition={{ duration: 0.5 }}
+            >
               Every second <br />scored
-            </h2>
-            <p className="text-xl text-gray-600 mb-8">
+            </motion.h2>
+            <motion.p
+              className="text-xl text-gray-600 mb-8"
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
               We break down your video into three critical parts and score each one. No more guessing why videos flop.
-            </p>
-            <div className="space-y-4">
+            </motion.p>
+            <motion.div
+              className="space-y-4"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.3 }}
+            >
               {[
                 { label: "Hook", desc: "First 3 seconds — do they stop scrolling?" },
                 { label: "Body", desc: "Middle content — do they keep watching?" },
@@ -581,29 +635,44 @@ function ScoreDemo() {
               ].map((item, i) => (
                 <motion.div
                   key={item.label}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  variants={fadeInLeft}
+                  transition={{ duration: 0.4 }}
                   className="flex items-start gap-4"
                 >
-                  <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  <motion.div
+                    className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm flex-shrink-0"
+                    whileInView={{ scale: [0.8, 1.1, 1] }}
+                    viewport={{ once: false }}
+                    transition={{ duration: 0.3, delay: i * 0.1 }}
+                  >
                     {i + 1}
-                  </div>
+                  </motion.div>
                   <div>
                     <p className="font-bold text-gray-900">{item.label}</p>
                     <p className="text-gray-600 text-sm">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
 
           {/* Right - Phone with scores */}
-          <div className="flex justify-center">
+          <motion.div
+            className="flex justify-center"
+            variants={scaleIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+          >
             <div className="relative">
               {/* Phone */}
-              <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
+              <motion.div
+                className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl"
+                whileInView={{ y: [20, 0], opacity: [0, 1] }}
+                viewport={{ once: false }}
+                transition={{ duration: 0.5 }}
+              >
                 <div className="bg-black rounded-[2.5rem] overflow-hidden w-[280px]">
                   <div className="relative aspect-[9/16]">
                     <img
@@ -669,7 +738,7 @@ function ScoreDemo() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Floating badge */}
               <AnimatePresence>
@@ -687,7 +756,7 @@ function ScoreDemo() {
                 )}
               </AnimatePresence>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
@@ -706,33 +775,16 @@ function CoachDemo() {
         if (entry.isIntersecting && !hasPlayed.current) {
           hasPlayed.current = true;
           setTimeout(() => setPhase(1), 400);
-          setTimeout(() => setPhase(2), 1200);
-          setTimeout(() => setPhase(3), 2000);
+          setTimeout(() => setPhase(2), 1400);
+          setTimeout(() => setPhase(3), 2400);
+          setTimeout(() => setPhase(4), 3400);
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.4 }
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
-
-  const suggestions = [
-    {
-      type: "critical",
-      title: "Weak ending",
-      text: "Your video cuts off without a CTA. Add a question like \"Which one should I try next?\" to spark comments.",
-    },
-    {
-      type: "tip",
-      title: "Hook improvement",
-      text: "Add text overlay in the first second. Videos with on-screen text get 40% more watch time.",
-    },
-    {
-      type: "good",
-      title: "Great pacing",
-      text: "Your cuts every 2-3 seconds keep attention. Keep this rhythm in future videos.",
-    },
-  ];
 
   return (
     <section
@@ -748,91 +800,168 @@ function CoachDemo() {
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left - Chat interface */}
-          <div className="order-2 lg:order-1 flex justify-center">
-            <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-md">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center">
+          <motion.div
+            className="order-2 lg:order-1 flex justify-center"
+            variants={scaleIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+              {/* Chat header */}
+              <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-gray-50">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <p className="font-bold text-gray-900">AI Coach</p>
-                  <p className="text-xs text-gray-500">Analyzing your video...</p>
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                    Online
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              {/* Chat messages */}
+              <div className="p-4 space-y-4 min-h-[320px]">
                 <AnimatePresence>
-                  {suggestions.map((suggestion, i) => (
-                    phase >= i + 1 && (
-                      <motion.div
-                        key={suggestion.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`rounded-2xl p-4 ${
-                          suggestion.type === "critical"
-                            ? "bg-red-50 border-2 border-red-200"
-                            : suggestion.type === "tip"
-                            ? "bg-amber-50 border-2 border-amber-200"
-                            : "bg-green-50 border-2 border-green-200"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                              suggestion.type === "critical"
-                                ? "bg-red-500 text-white"
-                                : suggestion.type === "tip"
-                                ? "bg-amber-500 text-white"
-                                : "bg-green-500 text-white"
-                            }`}
-                          >
-                            {suggestion.type === "critical" ? "!" : suggestion.type === "tip" ? "?" : "✓"}
-                          </div>
-                          <div>
-                            <p className="font-bold text-gray-900 text-sm">{suggestion.title}</p>
-                            <p className="text-gray-600 text-sm mt-1">{suggestion.text}</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )
-                  ))}
+                  {/* User message */}
+                  {phase >= 1 && (
+                    <motion.div
+                      key="user1"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex justify-end"
+                    >
+                      <div className="bg-primary text-white rounded-2xl rounded-br-md px-4 py-2 max-w-[80%]">
+                        <p className="text-sm">Why are my videos not getting views?</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* AI response */}
+                  {phase >= 2 && (
+                    <motion.div
+                      key="ai1"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex justify-start"
+                    >
+                      <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
+                        <p className="text-sm text-gray-800">I analyzed your last 8 videos. Here's the pattern:</p>
+                        <p className="text-sm text-gray-800 mt-2"><strong>Main issue:</strong> Your hooks average 64/100. You're losing viewers before they see your actual content.</p>
+                        <p className="text-sm text-gray-800 mt-2"><strong>Quick win:</strong> Start with movement or text on screen. Your highest-scoring video did exactly that.</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* User follow-up */}
+                  {phase >= 3 && (
+                    <motion.div
+                      key="user2"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex justify-end"
+                    >
+                      <div className="bg-primary text-white rounded-2xl rounded-br-md px-4 py-2 max-w-[80%]">
+                        <p className="text-sm">What should I do for my next video?</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* AI actionable response */}
+                  {phase >= 4 && (
+                    <motion.div
+                      key="ai2"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex justify-start"
+                    >
+                      <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 max-w-[85%]">
+                        <p className="text-sm text-gray-800">Try this formula:</p>
+                        <p className="text-sm text-gray-800 mt-1">1. Open with "You won't believe..."</p>
+                        <p className="text-sm text-gray-800">2. Show the result first, then how</p>
+                        <p className="text-sm text-gray-800">3. End with a question for comments</p>
+                      </div>
+                    </motion.div>
+                  )}
                 </AnimatePresence>
               </div>
+
+              {/* Input bar */}
+              <div className="p-4 border-t border-gray-100">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
+                  <input
+                    type="text"
+                    placeholder="Ask your coach..."
+                    className="flex-1 bg-transparent text-sm outline-none"
+                    disabled
+                  />
+                  <ArrowRight className="w-5 h-5 text-gray-400" />
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right - Text */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            variants={fadeInRight}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
             className="order-1 lg:order-2"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-              Your personal <br />AI coach
-            </h2>
-            <p className="text-xl text-gray-700 mb-8">
-              Not just scores — actual feedback. The AI tells you exactly what's wrong and how to fix it. Like having a viral content expert review every video.
-            </p>
-            <div className="space-y-4">
+            <motion.h2
+              className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6"
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+              transition={{ duration: 0.5 }}
+            >
+              Chat with your <br />AI coach
+            </motion.h2>
+            <motion.p
+              className="text-xl text-gray-700 mb-8"
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              Ask questions, get answers. The AI analyzes patterns across all your videos and tells you exactly what to improve. Like having a viral expert on speed dial.
+            </motion.p>
+            <motion.div
+              className="space-y-4"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: false, amount: 0.3 }}
+            >
               {[
-                "Identifies weak spots instantly",
-                "Gives specific, actionable fixes",
-                "Learns what works for your niche",
+                "Analyzes all your videos for patterns",
+                "Answers any question about your content",
+                "Gives personalized tips for your niche",
               ].map((item, i) => (
                 <motion.div
                   key={item}
-                  initial={{ opacity: 0, x: 20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                  variants={fadeInRight}
+                  transition={{ duration: 0.4 }}
                   className="flex items-center gap-3"
                 >
-                  <Check className="w-5 h-5 text-gray-900" />
+                  <motion.div
+                    whileInView={{ scale: [0.8, 1.1, 1] }}
+                    viewport={{ once: false }}
+                    transition={{ duration: 0.3, delay: i * 0.1 }}
+                  >
+                    <Check className="w-5 h-5 text-gray-900" />
+                  </motion.div>
                   <span className="text-gray-900 font-medium">{item}</span>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -1016,7 +1145,7 @@ export default function LandingPage() {
 
       {/* How It Works - Yellow Section */}
       <section
-        className="py-24 md:py-32 px-4 sm:px-6 relative"
+        className="py-24 md:py-32 px-4 sm:px-6 relative overflow-hidden"
         style={{
           backgroundColor: 'rgb(255,241,0)',
           backgroundImage: 'linear-gradient(90deg, rgba(0, 0, 0, .12) 1px, transparent 0), linear-gradient(180deg, rgba(0, 0, 0, .12) 1px, transparent 0)',
@@ -1026,9 +1155,11 @@ export default function LandingPage() {
       >
         <div className="max-w-5xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
             <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-4">
@@ -1036,7 +1167,13 @@ export default function LandingPage() {
             </h2>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-12 md:gap-16">
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.2 }}
+            className="grid md:grid-cols-3 gap-12 md:gap-16"
+          >
             {[
               {
                 step: "01",
@@ -1056,18 +1193,23 @@ export default function LandingPage() {
             ].map((item, i) => (
               <motion.div
                 key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                variants={fadeInUp}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
                 className="text-center"
               >
-                <div className="text-8xl sm:text-9xl font-black mb-4 text-gray-900">{item.step}</div>
+                <motion.div
+                  className="text-8xl sm:text-9xl font-black mb-4 text-gray-900"
+                  whileInView={{ scale: [0.8, 1.05, 1] }}
+                  viewport={{ once: false }}
+                  transition={{ duration: 0.5, delay: i * 0.15 }}
+                >
+                  {item.step}
+                </motion.div>
                 <h3 className="text-2xl font-black text-gray-900 mb-3">{item.title}</h3>
                 <p className="text-gray-700 text-lg">{item.description}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1084,12 +1226,14 @@ export default function LandingPage() {
       <PricingSection />
 
       {/* FAQ */}
-      <section className="py-20 px-4 sm:px-6 relative">
+      <section className="py-20 px-4 sm:px-6 relative overflow-hidden">
         <div className="max-w-2xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
@@ -1097,7 +1241,13 @@ export default function LandingPage() {
             </h2>
           </motion.div>
 
-          <div className="space-y-4">
+          <motion.div
+            className="space-y-4"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.2 }}
+          >
             {[
               {
                 question: "What counts as one analysis?",
@@ -1114,23 +1264,22 @@ export default function LandingPage() {
             ].map((item, i) => (
               <motion.div
                 key={item.question}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                variants={fadeInUp}
+                transition={{ duration: 0.4 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 cursor-default"
               >
                 <h3 className="font-semibold text-gray-900 mb-2">{item.question}</h3>
                 <p className="text-gray-600">{item.answer}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA - Yellow Section */}
       <section
-        className="py-20 px-4 sm:px-6 relative"
+        className="py-20 px-4 sm:px-6 relative overflow-hidden"
         style={{
           backgroundColor: 'rgb(255,241,0)',
           backgroundImage: 'linear-gradient(90deg, rgba(0, 0, 0, .12) 1px, transparent 0), linear-gradient(180deg, rgba(0, 0, 0, .12) 1px, transparent 0)',
@@ -1139,23 +1288,44 @@ export default function LandingPage() {
         }}
       >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
           className="max-w-3xl mx-auto text-center"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+          <motion.h2
+            className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4"
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false }}
+            transition={{ duration: 0.5 }}
+          >
             Ready to create viral content?
-          </h2>
-          <p className="text-xl text-gray-700 mb-8">
+          </motion.h2>
+          <motion.p
+            className="text-xl text-gray-700 mb-8"
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             Join thousands of creators using AI to level up their content.
-          </p>
-          <Link href="/onboarding">
-            <Button size="lg" className="rounded-full px-8 py-6 text-lg font-semibold bg-gray-900 hover:bg-gray-800">
-              Start Free Analysis
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          </motion.p>
+          <motion.div
+            whileInView={{ scale: [0.9, 1.05, 1] }}
+            viewport={{ once: false }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Link href="/onboarding">
+              <Button size="lg" className="rounded-full px-8 py-6 text-lg font-semibold bg-gray-900 hover:bg-gray-800 hover:scale-105 transition-transform">
+                Start Free Analysis
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+          </motion.div>
         </motion.div>
       </section>
 
