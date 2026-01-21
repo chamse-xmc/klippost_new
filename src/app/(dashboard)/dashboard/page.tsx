@@ -1193,53 +1193,61 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Retention Timeline */}
+          {/* Retention */}
           {analysisResult.analysis.retentionScore != null && (
             <div className="rounded-2xl bg-card border border-border overflow-hidden">
-              <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="p-4 border-b border-border">
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Retention</h4>
-                <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                  {analysisResult.analysis.retentionScore}
-                </span>
               </div>
-              {analysisResult.analysis.retentionDropoffs && analysisResult.analysis.retentionDropoffs.length > 0 && (
-                <div className="p-4 space-y-2">
-                  <p className="text-xs text-muted-foreground mb-2">Predicted drop-off points:</p>
-                  {analysisResult.analysis.retentionDropoffs.map((dropoff, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm">
-                      <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400 font-mono text-xs">
-                        {formatTimestamp(dropoff.timestamp)}
-                      </span>
-                      <span className="text-muted-foreground">{dropoff.reason}</span>
+              <div className="flex items-stretch">
+                <div className="flex-1 p-3 sm:p-4">
+                  {analysisResult.analysis.retentionDropoffs && analysisResult.analysis.retentionDropoffs.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {analysisResult.analysis.retentionDropoffs.map((dropoff, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs sm:text-sm">
+                          <span className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-xs shrink-0">
+                            {formatTimestamp(dropoff.timestamp)}
+                          </span>
+                          <span className="text-muted-foreground">{dropoff.reason}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-xs sm:text-sm text-muted-foreground">No significant drop-off points detected</p>
+                  )}
                 </div>
-              )}
+                <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+                  <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    {analysisResult.analysis.retentionScore}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
           {/* CTA Analysis */}
-          {(analysisResult.analysis.ctaType || analysisResult.analysis.ctaStrength != null) && (
-            <div className="rounded-2xl bg-card border border-border p-4">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Call to Action</h4>
-              <div className="flex items-center gap-4 mb-2">
-                {analysisResult.analysis.ctaType && (
-                  <span className="px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-medium text-sm">
-                    {ctaTypeLabels[analysisResult.analysis.ctaType] || analysisResult.analysis.ctaType}
-                  </span>
-                )}
-                {analysisResult.analysis.ctaStrength != null && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Strength:</span>
-                    <span className="text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                      {analysisResult.analysis.ctaStrength}
+          {analysisResult.analysis.ctaStrength != null && (
+            <div className="rounded-2xl bg-card border border-border overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Call to Action</h4>
+              </div>
+              <div className="flex items-stretch">
+                <div className="flex-1 p-3 sm:p-4">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-semibold text-foreground text-sm sm:text-base">
+                      {ctaTypeLabels[analysisResult.analysis.ctaType || "NONE"] || analysisResult.analysis.ctaType || "None"}
                     </span>
                   </div>
-                )}
+                  {analysisResult.analysis.ctaFeedback && (
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysisResult.analysis.ctaFeedback}</p>
+                  )}
+                </div>
+                <div className="w-16 sm:w-20 flex items-center justify-center bg-muted/50">
+                  <span className="text-2xl sm:text-3xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    {analysisResult.analysis.ctaStrength}
+                  </span>
+                </div>
               </div>
-              {analysisResult.analysis.ctaFeedback && (
-                <p className="text-sm text-muted-foreground">{analysisResult.analysis.ctaFeedback}</p>
-              )}
             </div>
           )}
 
