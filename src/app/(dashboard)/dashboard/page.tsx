@@ -1076,10 +1076,31 @@ export default function DashboardPage() {
 
             <div className="relative p-6 sm:p-8">
               <ScoreDisplay score={analysisResult.analysis.viralScore} onCelebrate={triggerCelebration} />
-              <div className="mt-4 sm:mt-6 text-center">
-                <span className="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white font-medium">
-                  {(analysisResult.analysis.expectedViewsMin ?? analysisResult.analysis.viewsMin ?? 0).toLocaleString()} - {(analysisResult.analysis.expectedViewsMax ?? analysisResult.analysis.viewsMax ?? 0).toLocaleString()} expected views
-                </span>
+
+              {/* Engagement Stats */}
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
+                  <span className="text-sm font-semibold text-white">{(analysisResult.analysis.expectedViewsMin ?? analysisResult.analysis.viewsMin ?? 0).toLocaleString()}-{(analysisResult.analysis.expectedViewsMax ?? analysisResult.analysis.viewsMax ?? 0).toLocaleString()}</span>
+                  <span className="text-xs text-white/60 ml-1">views</span>
+                </div>
+                {analysisResult.analysis.estimatedLikesMin != null && (
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
+                    <span className="text-sm font-semibold text-white">{analysisResult.analysis.estimatedLikesMin.toLocaleString()}-{(analysisResult.analysis.estimatedLikesMax || 0).toLocaleString()}</span>
+                    <span className="text-xs text-white/60 ml-1">likes</span>
+                  </div>
+                )}
+                {analysisResult.analysis.estimatedCommentsMin != null && (
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
+                    <span className="text-sm font-semibold text-white">{analysisResult.analysis.estimatedCommentsMin.toLocaleString()}-{(analysisResult.analysis.estimatedCommentsMax || 0).toLocaleString()}</span>
+                    <span className="text-xs text-white/60 ml-1">comments</span>
+                  </div>
+                )}
+                {analysisResult.analysis.estimatedSharesMin != null && (
+                  <div className="bg-white/15 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center">
+                    <span className="text-sm font-semibold text-white">{analysisResult.analysis.estimatedSharesMin.toLocaleString()}-{(analysisResult.analysis.estimatedSharesMax || 0).toLocaleString()}</span>
+                    <span className="text-xs text-white/60 ml-1">shares</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1219,39 +1240,6 @@ export default function DashboardPage() {
               {analysisResult.analysis.ctaFeedback && (
                 <p className="text-sm text-muted-foreground">{analysisResult.analysis.ctaFeedback}</p>
               )}
-            </div>
-          )}
-
-          {/* Engagement Predictions */}
-          {(analysisResult.analysis.estimatedLikesMin != null || analysisResult.analysis.estimatedCommentsMin != null || analysisResult.analysis.estimatedSharesMin != null) && (
-            <div className="rounded-2xl bg-card border border-border p-4">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement Forecast</h4>
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                {analysisResult.analysis.estimatedLikesMin != null && (
-                  <div className="text-center p-3 rounded-xl bg-muted">
-                    <div className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                      {analysisResult.analysis.estimatedLikesMin.toLocaleString()}-{(analysisResult.analysis.estimatedLikesMax || 0).toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">Likes</div>
-                  </div>
-                )}
-                {analysisResult.analysis.estimatedCommentsMin != null && (
-                  <div className="text-center p-3 rounded-xl bg-muted">
-                    <div className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                      {analysisResult.analysis.estimatedCommentsMin.toLocaleString()}-{(analysisResult.analysis.estimatedCommentsMax || 0).toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">Comments</div>
-                  </div>
-                )}
-                {analysisResult.analysis.estimatedSharesMin != null && (
-                  <div className="text-center p-3 rounded-xl bg-muted">
-                    <div className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                      {analysisResult.analysis.estimatedSharesMin.toLocaleString()}-{(analysisResult.analysis.estimatedSharesMax || 0).toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-1">Shares</div>
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
