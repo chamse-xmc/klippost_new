@@ -73,44 +73,44 @@ export async function POST(request: Request) {
               },
             });
             console.log("User updated successfully");
+
+            // Handle affiliate commission
+            const user = await db.user.findUnique({
+              where: { id: userId },
+              select: { referredBy: true },
+            });
+
+            if (user?.referredBy) {
+              const affiliate = await db.user.findUnique({
+                where: { referralCode: user.referredBy },
+              });
+
+              if (affiliate) {
+                const amount = subscription.items.data[0]?.price.unit_amount || 0;
+                const commission = amount / 100 / 2; // 50% commission
+
+                await db.affiliatePayment.create({
+                  data: {
+                    affiliateId: affiliate.id,
+                    referredUserId: userId,
+                    originalAmount: amount / 100,
+                    commission,
+                    stripePaymentId: (session.payment_intent as string) || session.id,
+                    status: "PENDING",
+                  },
+                });
+
+                await db.user.update({
+                  where: { id: affiliate.id },
+                  data: {
+                    affiliatePending: { increment: commission },
+                  },
+                });
+              }
+            }
           } catch (dbError) {
             console.error("Error in checkout handler:", dbError);
             throw dbError;
-          }
-
-          // Handle affiliate commission
-          const user = await db.user.findUnique({
-            where: { id: userId },
-            select: { referredBy: true },
-          });
-
-          if (user?.referredBy) {
-            const affiliate = await db.user.findUnique({
-              where: { referralCode: user.referredBy },
-            });
-
-            if (affiliate) {
-              const amount = subscription.items.data[0]?.price.unit_amount || 0;
-              const commission = amount / 100 / 2; // 50% commission
-
-              await db.affiliatePayment.create({
-                data: {
-                  affiliateId: affiliate.id,
-                  referredUserId: userId,
-                  originalAmount: amount / 100,
-                  commission,
-                  stripePaymentId: (session.payment_intent as string) || session.id,
-                  status: "PENDING",
-                },
-              });
-
-              await db.user.update({
-                where: { id: affiliate.id },
-                data: {
-                  affiliatePending: { increment: commission },
-                },
-              });
-            }
           }
         }
         break;
