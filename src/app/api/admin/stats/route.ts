@@ -84,20 +84,27 @@ export async function POST(req: NextRequest) {
         orderBy: { _count: { path: "desc" } },
         take: 10,
       }),
-      // Top countries last 24 hours
+      // Top countries last 24 hours (exclude admin's location)
       db.pageView.groupBy({
         by: ["country"],
         where: {
           createdAt: { gte: twentyFourHoursAgo },
           country: { not: null },
+          city: { not: "Grenå" },
         },
         _count: { country: true },
         orderBy: { _count: { country: "desc" } },
         take: 10,
       }),
-      // Recent visitors with location
+      // Recent visitors with location (exclude admin's location)
       db.pageView.findMany({
         take: 20,
+        where: {
+          NOT: [
+            { city: "Grenå" },
+            { country: null, city: null },
+          ],
+        },
         orderBy: { createdAt: "desc" },
         select: {
           id: true,
