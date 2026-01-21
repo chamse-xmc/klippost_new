@@ -23,31 +23,31 @@ export const authOptions: NextAuthOptions = {
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
             </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0a0a0a; padding: 40px 20px;">
-              <div style="max-width: 400px; margin: 0 auto; background: #171717; border-radius: 16px; padding: 40px; border: 1px solid #262626;">
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; padding: 40px 20px;">
+              <div style="max-width: 400px; margin: 0 auto; background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
                 <div style="text-align: center; margin-bottom: 32px;">
-                  <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #8b5cf6; border-radius: 12px; margin-bottom: 16px;">
+                  <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #111111; border-radius: 12px; margin-bottom: 16px;">
                     <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
                       <path d="M8 5.14v14l11-7-11-7z" />
                     </svg>
                   </div>
-                  <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #fafafa;">Sign in to klippost</h1>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #111111;">Sign in to klippost</h1>
                 </div>
 
-                <p style="color: #a1a1aa; font-size: 15px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
+                <p style="color: #666666; font-size: 15px; line-height: 1.6; margin: 0 0 24px; text-align: center;">
                   Click the button below to sign in. This link expires in 24 hours.
                 </p>
 
-                <a href="${url}" style="display: block; background: #8b5cf6; color: white; text-decoration: none; padding: 14px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; text-align: center; margin-bottom: 24px;">
+                <a href="${url}" style="display: block; background: #111111; color: white; text-decoration: none; padding: 14px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; text-align: center; margin-bottom: 24px;">
                   Sign in to klippost
                 </a>
 
-                <p style="color: #71717a; font-size: 13px; line-height: 1.5; margin: 0; text-align: center;">
+                <p style="color: #999999; font-size: 13px; line-height: 1.5; margin: 0; text-align: center;">
                   If you didn't request this email, you can safely ignore it.
                 </p>
               </div>
 
-              <p style="color: #52525b; font-size: 12px; text-align: center; margin-top: 24px;">
+              <p style="color: #999999; font-size: 12px; text-align: center; margin-top: 24px;">
                 klippost - AI Video Analysis
               </p>
             </body>
