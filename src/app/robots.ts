@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', '/app/', '/coach/', '/settings/', '/analysis/'],
+      disallow: ['/api/', '/app/', '/coach/', '/settings/', '/analysis/', '/admin/'],
     },
     sitemap: 'https://klippost.co/sitemap.xml',
   };

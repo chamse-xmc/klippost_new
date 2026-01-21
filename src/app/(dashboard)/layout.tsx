@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 export default function DashboardLayout({
@@ -10,15 +10,20 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
-  // Redirect to onboarding if not authenticated
+  // Redirect to onboarding if not authenticated OR if session exists but no valid user
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/onboarding");
+    } else if (status === "authenticated" && !session?.user?.id) {
+      // Session exists but no valid user - sign out and redirect
+      signOut({ redirect: false }).then(() => {
+        router.replace("/onboarding");
+      });
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   // Show loading while checking auth
   if (status === "loading") {
@@ -29,8 +34,8 @@ export default function DashboardLayout({
     );
   }
 
-  // Don't render dashboard if not authenticated
-  if (status === "unauthenticated") {
+  // Don't render dashboard if not authenticated or no valid user
+  if (status === "unauthenticated" || !session?.user?.id) {
     return null;
   }
 

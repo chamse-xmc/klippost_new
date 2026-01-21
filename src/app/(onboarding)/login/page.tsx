@@ -6,16 +6,17 @@ import { signIn, useSession } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
-    if (status === "authenticated") {
+    // Only redirect if authenticated AND we have a valid user ID
+    if (status === "authenticated" && session?.user?.id) {
       router.push("/app");
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
@@ -44,7 +45,8 @@ export default function LoginPage() {
     }
   };
 
-  if (status === "loading" || status === "authenticated") {
+  // Show loading while checking auth or while redirecting to app
+  if (status === "loading" || (status === "authenticated" && session?.user?.id)) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />

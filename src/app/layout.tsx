@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Nunito } from "next/font/google";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
+import { PageTracker } from "@/components/page-tracker";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${nunito.variable} font-sans antialiased`}>
         <Providers>
+          <PageTracker />
           {children}
           <Toaster richColors position="top-right" />
         </Providers>

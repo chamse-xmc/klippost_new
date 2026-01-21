@@ -358,3 +358,20 @@ model Review {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ============================================================================
+// ANALYTICS MODELS
+// ============================================================================
+
+model PageView {
+  id        String   @id @default(cuid())
+  path      String   // e.g., "/", "/app", "/pricing"
+  userAgent String?  @db.Text
+  ip        String?
+  referrer  String?  @db.Text
+  userId    String?  // Optional - logged in user
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([path])
+}
