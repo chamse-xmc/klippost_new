@@ -707,8 +707,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-4 sm:px-6 relative">
+      {/* How It Works - Yellow Section */}
+      <section
+        className="py-24 md:py-32 px-4 sm:px-6 relative"
+        style={{
+          backgroundColor: 'rgb(255,241,0)',
+          backgroundImage: 'linear-gradient(90deg, rgba(0, 0, 0, .12) 1px, transparent 0), linear-gradient(180deg, rgba(0, 0, 0, .12) 1px, transparent 0)',
+          backgroundSize: '33.5vw 33.5vw',
+          backgroundPosition: '50%',
+        }}
+      >
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -716,15 +724,12 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-4">
               How it works
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Upload your video, get instant AI feedback, improve before you post.
-            </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12 md:gap-16">
             {[
               {
                 step: "01",
@@ -748,11 +753,11 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100"
+                className="text-center"
               >
-                <div className="text-sm font-semibold text-primary mb-2">{item.step}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
+                <div className="text-8xl sm:text-9xl font-black mb-4" style={{ color: 'rgb(250, 12, 247)' }}>{item.step}</div>
+                <h3 className="text-2xl font-black text-gray-900 mb-3">{item.title}</h3>
+                <p className="text-gray-700 text-lg">{item.description}</p>
               </motion.div>
             ))}
           </div>
