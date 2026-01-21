@@ -9,17 +9,18 @@ import { calculatePotential } from "@/services/potential-calculator";
 export default function OnboardingPotentialPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { followerRange, heardFrom, goals, challenges, reset } = useOnboardingStore();
+  const { _hasHydrated, followerRange, heardFrom, goals, challenges, reset } = useOnboardingStore();
   const [potential, setPotential] = useState<ReturnType<typeof calculatePotential> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
-    if (followerRange && goals.length > 0 && challenges.length > 0) {
+    // Only calculate after store has hydrated
+    if (_hasHydrated && followerRange && goals.length > 0 && challenges.length > 0) {
       setPotential(calculatePotential(followerRange, goals, challenges));
     }
-  }, [followerRange, goals, challenges]);
+  }, [_hasHydrated, followerRange, goals, challenges]);
 
   useEffect(() => {
     // Check for valid session with actual user ID
@@ -102,9 +103,27 @@ export default function OnboardingPotentialPage() {
     );
   }
 
-  // If no onboarding data, redirect to start of onboarding
-  if (!potential) {
+  // Wait for store to hydrate before checking data
+  if (!_hasHydrated) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If no onboarding data after hydration, redirect to start
+  if (!followerRange || goals.length === 0 || challenges.length === 0) {
     router.push("/onboarding");
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Wait for potential to be calculated
+  if (!potential) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />

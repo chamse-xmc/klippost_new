@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import type { FollowerRange, Goal, Challenge, HeardFrom } from "@prisma/client";
 
 interface OnboardingState {
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   followerRange: FollowerRange | null;
   heardFrom: HeardFrom | null;
   goals: Goal[];
@@ -17,6 +19,8 @@ interface OnboardingState {
 export const useOnboardingStore = create<OnboardingState>()(
   persist(
     (set) => ({
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
       followerRange: null,
       heardFrom: null,
       goals: [],
@@ -29,6 +33,9 @@ export const useOnboardingStore = create<OnboardingState>()(
     }),
     {
       name: "onboarding-storage",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
