@@ -1172,21 +1172,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Hook Type Analysis */}
-          {analysisResult.analysis.hookType && (
-            <div className="rounded-2xl bg-card border border-border p-4">
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Hook Type</h4>
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-400 font-medium text-sm">
-                  {hookTypeLabels[analysisResult.analysis.hookType]?.label || analysisResult.analysis.hookType}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  {hookTypeLabels[analysisResult.analysis.hookType]?.description}
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Retention Timeline */}
           {analysisResult.analysis.retentionScore != null && (
             <div className="rounded-2xl bg-card border border-border overflow-hidden">
@@ -1237,72 +1222,33 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Trend Alignment */}
-          {analysisResult.analysis.trendScore != null && (
-            <div className="rounded-2xl bg-card border border-border p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trend Alignment</h4>
-                <span className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
-                  {analysisResult.analysis.trendScore}
-                </span>
-              </div>
-              {analysisResult.analysis.trendMatches && analysisResult.analysis.trendMatches.length > 0 && (
-                <div className="mb-2">
-                  <span className="text-xs text-muted-foreground">Matching trends:</span>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {analysisResult.analysis.trendMatches.map((trend, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-xs">
-                        {trend}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {analysisResult.analysis.trendSuggestions && analysisResult.analysis.trendSuggestions.length > 0 && (
-                <div>
-                  <span className="text-xs text-muted-foreground">Try these trends:</span>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {analysisResult.analysis.trendSuggestions.map((trend, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-xs">
-                        {trend}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Engagement Predictions */}
           {(analysisResult.analysis.estimatedLikesMin != null || analysisResult.analysis.estimatedCommentsMin != null || analysisResult.analysis.estimatedSharesMin != null) && (
             <div className="rounded-2xl bg-card border border-border p-4">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement Forecast</h4>
               <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {analysisResult.analysis.estimatedLikesMin != null && (
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl mb-1">❤️</div>
-                    <div className="text-xs sm:text-sm font-semibold text-foreground">
+                  <div className="text-center p-3 rounded-xl bg-muted">
+                    <div className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
                       {analysisResult.analysis.estimatedLikesMin.toLocaleString()}-{(analysisResult.analysis.estimatedLikesMax || 0).toLocaleString()}
                     </div>
-                    <div className="text-xs text-muted-foreground">Likes</div>
+                    <div className="text-xs text-muted-foreground mt-1">Likes</div>
                   </div>
                 )}
                 {analysisResult.analysis.estimatedCommentsMin != null && (
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl mb-1">💬</div>
-                    <div className="text-xs sm:text-sm font-semibold text-foreground">
+                  <div className="text-center p-3 rounded-xl bg-muted">
+                    <div className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
                       {analysisResult.analysis.estimatedCommentsMin.toLocaleString()}-{(analysisResult.analysis.estimatedCommentsMax || 0).toLocaleString()}
                     </div>
-                    <div className="text-xs text-muted-foreground">Comments</div>
+                    <div className="text-xs text-muted-foreground mt-1">Comments</div>
                   </div>
                 )}
                 {analysisResult.analysis.estimatedSharesMin != null && (
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl mb-1">🔄</div>
-                    <div className="text-xs sm:text-sm font-semibold text-foreground">
+                  <div className="text-center p-3 rounded-xl bg-muted">
+                    <div className="text-lg sm:text-xl font-bold text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
                       {analysisResult.analysis.estimatedSharesMin.toLocaleString()}-{(analysisResult.analysis.estimatedSharesMax || 0).toLocaleString()}
                     </div>
-                    <div className="text-xs text-muted-foreground">Shares</div>
+                    <div className="text-xs text-muted-foreground mt-1">Shares</div>
                   </div>
                 )}
               </div>
@@ -1320,7 +1266,7 @@ export default function DashboardPage() {
                   <div className="flex items-stretch">
                     <div className="flex-1 p-3 sm:p-4">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-foreground text-sm sm:text-base">🎵 Audio</span>
+                        <span className="font-semibold text-foreground text-sm sm:text-base">Audio</span>
                       </div>
                       {analysisResult.analysis.audioFeedback && (
                         <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysisResult.analysis.audioFeedback}</p>
@@ -1337,7 +1283,7 @@ export default function DashboardPage() {
                   <div className="flex items-stretch">
                     <div className="flex-1 p-3 sm:p-4">
                       <div className="flex items-baseline gap-2 mb-1">
-                        <span className="font-semibold text-foreground text-sm sm:text-base">🎨 Visual</span>
+                        <span className="font-semibold text-foreground text-sm sm:text-base">Visual</span>
                       </div>
                       {analysisResult.analysis.visualFeedback && (
                         <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">{analysisResult.analysis.visualFeedback}</p>
