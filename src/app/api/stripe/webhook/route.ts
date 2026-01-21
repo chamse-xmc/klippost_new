@@ -15,11 +15,16 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
 
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured");
+    return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
+  }
+
   try {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
     console.error("Webhook signature verification failed:", err);
@@ -31,6 +36,8 @@ export async function POST(request: Request) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
+
+        console.log("Checkout completed - userId:", userId, "subscription:", session.subscription);
 
         if (userId && session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(
