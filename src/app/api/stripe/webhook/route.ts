@@ -40,29 +40,41 @@ export async function POST(request: Request) {
         console.log("Checkout completed - userId:", userId, "subscription:", session.subscription);
 
         if (userId && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(
-            session.subscription as string
-          ) as Stripe.Subscription;
+          try {
+            console.log("Retrieving subscription from Stripe...");
+            const subscription = await stripe.subscriptions.retrieve(
+              session.subscription as string
+            ) as Stripe.Subscription;
 
-          const priceId = subscription.items.data[0]?.price.id;
-          const tier =
-            priceId === process.env.STRIPE_PRICE_PRO
-              ? "PRO"
-              : priceId === process.env.STRIPE_PRICE_UNLIMITED
-              ? "UNLIMITED"
-              : "FREE";
+            const priceId = subscription.items.data[0]?.price.id;
+            console.log("Price ID:", priceId, "Expected PRO:", process.env.STRIPE_PRICE_PRO, "Expected UNLIMITED:", process.env.STRIPE_PRICE_UNLIMITED);
 
-          const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+            const tier =
+              priceId === process.env.STRIPE_PRICE_PRO
+                ? "PRO"
+                : priceId === process.env.STRIPE_PRICE_UNLIMITED
+                ? "UNLIMITED"
+                : "FREE";
 
-          await db.user.update({
-            where: { id: userId },
-            data: {
-              subscription: tier,
-              stripeCustomerId: session.customer as string,
-              stripeSubId: session.subscription as string,
-              subExpiresAt: new Date(periodEnd * 1000),
-            },
-          });
+            console.log("Determined tier:", tier);
+
+            const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+
+            console.log("Updating user in database...");
+            await db.user.update({
+              where: { id: userId },
+              data: {
+                subscription: tier,
+                stripeCustomerId: session.customer as string,
+                stripeSubId: session.subscription as string,
+                subExpiresAt: new Date(periodEnd * 1000),
+              },
+            });
+            console.log("User updated successfully");
+          } catch (dbError) {
+            console.error("Error in checkout handler:", dbError);
+            throw dbError;
+          }
 
           // Handle affiliate commission
           const user = await db.user.findUnique({
