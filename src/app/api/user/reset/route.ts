@@ -32,7 +32,6 @@ export async function POST() {
         subExpiresAt: null,
         bonusAnalyses: 0,
         affiliatePending: 0,
-        affiliatePaid: 0,
       },
     });
 
