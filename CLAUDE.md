@@ -1,110 +1,85 @@
-# Unnamed - Video Virality Analyzer
+# klippost
 
-AI-powered video analysis to help creators go viral. Upload videos, get scored on hook/body/ending, and receive actionable suggestions.
+**Know if your video will go viral before you post it.**
 
-## Tech Stack
+## The Pitch
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
-- **Database**: PostgreSQL with Prisma ORM
-- **Auth**: NextAuth.js (Google + Facebook)
-- **AI**: Google Gemini 2.0 Flash (video understanding)
-- **Storage**: Uploadthing (video upload, thumbnails)
-- **Payments**: Stripe (subscriptions)
-- **Styling**: Tailwind CSS v4 + shadcn/ui (dark mode)
-- **State**: Zustand + TanStack React Query
+You spend 2 hours making a TikTok. You post it. 347 views. Pain.
 
-## Project Structure
+klippost fixes this. Upload your video *before* posting and our AI tells you:
+- Your viral potential score (0-100)
+- Predicted view range (e.g., "50K-100K")
+- Exactly what's wrong and how to fix it
+
+We score three things that make or break short-form content:
+1. **Hook** — Do the first 3 seconds stop the scroll?
+2. **Body** — Does the middle keep people watching?
+3. **Ending** — Is there a reason to follow/like/comment?
+
+The magic isn't the scores. It's the suggestions. Not "improve your hook" garbage — actual fixes like "Add text overlay at 0:02 to create curiosity gap" or "Your ending is abrupt, add a question to spark comments."
+
+Creators stop guessing. They fix weak spots before wasting a post.
+
+## Tech
+
+- **Next.js 16** (App Router) + TypeScript
+- **PostgreSQL** + Prisma
+- **Google Gemini 2.0 Flash** — watches videos, understands them
+- **Stripe** — subscriptions (monthly/yearly)
+- **Mailgun** — email magic links
+- **Uploadthing** — video uploads
+- **Tailwind + shadcn/ui**
+
+## Pricing
+
+| Plan | Price | Analyses |
+|------|-------|----------|
+| Free | $0 | 3/month |
+| Pro | $9/mo or $90/yr | 30/month |
+| Unlimited | $29/mo or $290/yr | Unlimited |
+
+## Structure
 
 ```
 src/
 ├── app/
-│   ├── (marketing)/          # Landing, pricing pages
-│   ├── (onboarding)/         # 4-step onboarding flow
-│   ├── (dashboard)/          # Protected dashboard pages
-│   │   ├── dashboard/        # Main dashboard
-│   │   ├── upload/           # Video upload
-│   │   ├── analysis/[id]/    # Analysis results
-│   │   ├── history/          # Video history
-│   │   ├── settings/         # User settings
-│   │   └── affiliate/        # Affiliate dashboard
-│   └── api/
-│       ├── auth/             # NextAuth
-│       ├── videos/           # Video CRUD
-│       ├── analysis/         # Trigger/get analysis
-│       ├── user/             # User profile/onboarding
-│       ├── stripe/           # Checkout, webhooks
-│       ├── affiliate/        # Affiliate stats
-│       └── uploadthing/      # File uploads
-├── components/
-│   ├── ui/                   # shadcn/ui components
-│   └── providers.tsx         # App providers
-├── lib/
-│   ├── auth.ts               # NextAuth config
-│   ├── db.ts                 # Prisma client
-│   ├── uploadthing.ts        # Uploadthing config
-│   └── onboarding-store.ts   # Zustand store
-└── services/
-    ├── video-analyzer.ts     # Gemini AI integration
-    ├── user-score.ts         # Weighted score calculation
-    ├── potential-calculator.ts # Onboarding potential
-    └── stripe.ts             # Stripe helpers
+│   ├── (marketing)/     # Landing, pricing
+│   ├── (onboarding)/    # 4-step flow + auth
+│   ├── (dashboard)/     # Upload, results, history, settings
+│   └── api/             # Auth, videos, analysis, stripe, uploads
+├── components/ui/       # shadcn components
+├── lib/                 # Auth, db, stores
+└── services/            # Gemini AI, Stripe, Mailgun
 ```
 
-## Key Features
-
-1. **Onboarding Flow**: 4-step flow (followers → goals → challenges → potential) before auth
-2. **Video Analysis**: Upload → Gemini AI analysis → scores (hook/body/ending) + suggestions
-3. **User Scoring**: Weighted average (40% recent, 30% previous, 20% older, 10% rest)
-4. **Subscriptions**: Free (3/mo), Pro $9 (30/mo), Unlimited $29
-5. **Affiliate Program**: 50% lifetime recurring commission
-
-## Pricing Tiers
-
-| Tier | Price | Analyses/Month |
-|------|-------|----------------|
-| Free | $0 | 3 |
-| Pro | $9/mo | 30 |
-| Unlimited | $29/mo | Unlimited |
-
-## Key Commands
+## Commands
 
 ```bash
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run db:push      # Push schema to database
-npm run db:generate  # Regenerate Prisma client
-npm run db:studio    # Open Prisma Studio
+npm run dev        # Dev server
+npm run build      # Production build
+npm run db:push    # Push schema
+npm run db:studio  # Prisma Studio
 ```
 
-## Environment Variables
+## Env Vars
 
-See `.env.example` for all required variables:
-- DATABASE_URL
-- NEXTAUTH_URL, NEXTAUTH_SECRET
-- GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
-- FACEBOOK_CLIENT_ID, FACEBOOK_CLIENT_SECRET
-- UPLOADTHING_SECRET, UPLOADTHING_APP_ID
-- GOOGLE_AI_API_KEY
-- STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_PRO, STRIPE_PRICE_UNLIMITED
-
-## Getting Started
-
-```bash
-npm install
-cp .env.example .env
-# Edit .env with your credentials
-npm run db:push
-npm run dev
+```
+DATABASE_URL
+NEXTAUTH_URL, NEXTAUTH_SECRET
+GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+MAILGUN_API_KEY, MAILGUN_DOMAIN, MAILGUN_REGION
+UPLOADTHING_SECRET, UPLOADTHING_APP_ID
+GOOGLE_AI_API_KEY
+STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+STRIPE_PRICE_PRO, STRIPE_PRICE_UNLIMITED
+STRIPE_PRICE_PRO_YEARLY, STRIPE_PRICE_UNLIMITED_YEARLY
 ```
 
-## User Flows
+## Flow
 
-### Onboarding
-Landing → Followers → Goals → Challenges → Potential → Sign Up → Dashboard
-
-### Video Analysis
-Upload → Select Platform/Mode → Processing → Results (scores + suggestions)
-
-### Affiliate
-Create referral code → Share link → Earn 50% of referred payments forever
+1. Land on homepage
+2. 4-step onboarding (followers → goals → challenges → see potential)
+3. Sign up (Google or email)
+4. Upload video
+5. Get scores + suggestions
+6. Fix weak spots, reupload or post with confidence

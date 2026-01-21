@@ -533,6 +533,313 @@ function PricingSection() {
   );
 }
 
+// Animated Score Demo
+function ScoreDemo() {
+  const [phase, setPhase] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasPlayed = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasPlayed.current) {
+          hasPlayed.current = true;
+          // Staggered animation
+          setTimeout(() => setPhase(1), 300);
+          setTimeout(() => setPhase(2), 800);
+          setTimeout(() => setPhase(3), 1300);
+          setTimeout(() => setPhase(4), 1800);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section ref={containerRef} className="py-24 px-4 sm:px-6 bg-white">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Left - Text */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              Every second <br />scored
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              We break down your video into three critical parts and score each one. No more guessing why videos flop.
+            </p>
+            <div className="space-y-4">
+              {[
+                { label: "Hook", desc: "First 3 seconds — do they stop scrolling?" },
+                { label: "Body", desc: "Middle content — do they keep watching?" },
+                { label: "Ending", desc: "Last moments — do they take action?" },
+              ].map((item, i) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-start gap-4"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{item.label}</p>
+                    <p className="text-gray-600 text-sm">{item.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Right - Phone with scores */}
+          <div className="flex justify-center">
+            <div className="relative">
+              {/* Phone */}
+              <div className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl">
+                <div className="bg-black rounded-[2.5rem] overflow-hidden w-[280px]">
+                  <div className="relative aspect-[9/16]">
+                    <img
+                      src="https://images.unsplash.com/photo-1463453091185-61582044d556?w=400&h=700&fit=crop&crop=face"
+                      alt="Creator"
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Overlay with scores */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-5">
+                      {/* Viral Score */}
+                      <AnimatePresence>
+                        {phase >= 1 && (
+                          <motion.div
+                            key="viral"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-primary rounded-2xl p-4 mb-4 text-center"
+                          >
+                            <p className="text-white/80 text-xs font-medium">Viral Score</p>
+                            <p className="text-5xl font-black text-white">87</p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Score bars */}
+                      <div className="space-y-3">
+                        <AnimatePresence>
+                          {phase >= 2 && (
+                            <motion.div
+                              key="hook-bar"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center justify-between bg-white/10 backdrop-blur rounded-xl px-4 py-3"
+                            >
+                              <span className="text-white text-sm font-medium">Hook</span>
+                              <span className="text-green-400 font-black text-lg">92</span>
+                            </motion.div>
+                          )}
+                          {phase >= 3 && (
+                            <motion.div
+                              key="body-bar"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center justify-between bg-white/10 backdrop-blur rounded-xl px-4 py-3"
+                            >
+                              <span className="text-white text-sm font-medium">Body</span>
+                              <span className="text-green-400 font-black text-lg">85</span>
+                            </motion.div>
+                          )}
+                          {phase >= 4 && (
+                            <motion.div
+                              key="ending-bar"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center justify-between bg-white/10 backdrop-blur rounded-xl px-4 py-3"
+                            >
+                              <span className="text-white text-sm font-medium">Ending</span>
+                              <span className="text-amber-400 font-black text-lg">68</span>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating badge */}
+              <AnimatePresence>
+                {phase >= 4 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className="absolute -right-4 -bottom-4 bg-white rounded-2xl px-4 py-3 shadow-xl border border-gray-100"
+                  >
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      <span className="font-bold text-gray-900">100K-500K views</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// AI Coach Demo
+function CoachDemo() {
+  const [phase, setPhase] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasPlayed = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasPlayed.current) {
+          hasPlayed.current = true;
+          setTimeout(() => setPhase(1), 400);
+          setTimeout(() => setPhase(2), 1200);
+          setTimeout(() => setPhase(3), 2000);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const suggestions = [
+    {
+      type: "critical",
+      title: "Weak ending",
+      text: "Your video cuts off without a CTA. Add a question like \"Which one should I try next?\" to spark comments.",
+    },
+    {
+      type: "tip",
+      title: "Hook improvement",
+      text: "Add text overlay in the first second. Videos with on-screen text get 40% more watch time.",
+    },
+    {
+      type: "good",
+      title: "Great pacing",
+      text: "Your cuts every 2-3 seconds keep attention. Keep this rhythm in future videos.",
+    },
+  ];
+
+  return (
+    <section
+      ref={containerRef}
+      className="py-24 px-4 sm:px-6 relative"
+      style={{
+        backgroundColor: 'rgb(255,241,0)',
+        backgroundImage: 'linear-gradient(90deg, rgba(0, 0, 0, .12) 1px, transparent 0), linear-gradient(180deg, rgba(0, 0, 0, .12) 1px, transparent 0)',
+        backgroundSize: '33.5vw 33.5vw',
+        backgroundPosition: '50%',
+      }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Left - Chat interface */}
+          <div className="order-2 lg:order-1 flex justify-center">
+            <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-md">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900">AI Coach</p>
+                  <p className="text-xs text-gray-500">Analyzing your video...</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <AnimatePresence>
+                  {suggestions.map((suggestion, i) => (
+                    phase >= i + 1 && (
+                      <motion.div
+                        key={suggestion.title}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`rounded-2xl p-4 ${
+                          suggestion.type === "critical"
+                            ? "bg-red-50 border-2 border-red-200"
+                            : suggestion.type === "tip"
+                            ? "bg-amber-50 border-2 border-amber-200"
+                            : "bg-green-50 border-2 border-green-200"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
+                              suggestion.type === "critical"
+                                ? "bg-red-500 text-white"
+                                : suggestion.type === "tip"
+                                ? "bg-amber-500 text-white"
+                                : "bg-green-500 text-white"
+                            }`}
+                          >
+                            {suggestion.type === "critical" ? "!" : suggestion.type === "tip" ? "?" : "✓"}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-900 text-sm">{suggestion.title}</p>
+                            <p className="text-gray-600 text-sm mt-1">{suggestion.text}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+
+          {/* Right - Text */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="order-1 lg:order-2"
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+              Your personal <br />AI coach
+            </h2>
+            <p className="text-xl text-gray-700 mb-8">
+              Not just scores — actual feedback. The AI tells you exactly what's wrong and how to fix it. Like having a viral content expert review every video.
+            </p>
+            <div className="space-y-4">
+              {[
+                "Identifies weak spots instantly",
+                "Gives specific, actionable fixes",
+                "Learns what works for your niche",
+              ].map((item, i) => (
+                <motion.div
+                  key={item}
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex items-center gap-3"
+                >
+                  <Check className="w-5 h-5 text-gray-900" />
+                  <span className="text-gray-900 font-medium">{item}</span>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Testimonials data
 const TESTIMONIALS = [
   {
@@ -582,7 +889,7 @@ function TestimonialsSection() {
   };
 
   return (
-    <section className="py-20 px-4 sm:px-6 bg-white overflow-hidden">
+    <section className="py-20 px-4 sm:px-6 bg-white overflow-hidden relative z-10">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
@@ -755,7 +1062,7 @@ export default function LandingPage() {
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
               >
-                <div className="text-8xl sm:text-9xl font-black mb-4" style={{ color: 'rgb(250, 12, 247)' }}>{item.step}</div>
+                <div className="text-8xl sm:text-9xl font-black mb-4 text-gray-900">{item.step}</div>
                 <h3 className="text-2xl font-black text-gray-900 mb-3">{item.title}</h3>
                 <p className="text-gray-700 text-lg">{item.description}</p>
               </motion.div>
@@ -764,50 +1071,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-20 px-4 sm:px-6 relative bg-white">
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Everything you need to go viral
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Stop guessing. Start knowing exactly what works.
-            </p>
-          </motion.div>
+      {/* Score Demo */}
+      <ScoreDemo />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "Hook Score", description: "See if your first 3 seconds grab attention or make people scroll", icon: Zap, color: "bg-yellow-100 text-yellow-600" },
-              { title: "Body Analysis", description: "Understand if your content keeps viewers engaged throughout", icon: TrendingUp, color: "bg-green-100 text-green-600" },
-              { title: "Ending Strength", description: "Know if your CTA drives action or falls flat", icon: Target, color: "bg-red-100 text-red-600" },
-              { title: "View Predictions", description: "Get estimated view ranges based on content quality", icon: TrendingUp, color: "bg-blue-100 text-blue-600" },
-              { title: "AI Suggestions", description: "Specific, actionable tips to improve your next video", icon: Sparkles, color: "bg-purple-100 text-purple-600" },
-              { title: "Multi-Platform", description: "Optimized for TikTok, Instagram Reels, and YouTube Shorts", icon: Play, color: "bg-pink-100 text-pink-600" },
-            ].map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="p-6 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors"
-              >
-                <div className={`w-10 h-10 rounded-xl ${feature.color} flex items-center justify-center mb-4`}>
-                  <feature.icon className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600 text-sm">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* AI Coach Demo */}
+      <CoachDemo />
 
       {/* Testimonials */}
       <TestimonialsSection />
@@ -815,28 +1083,80 @@ export default function LandingPage() {
       {/* Pricing Preview - Interactive */}
       <PricingSection />
 
-      {/* CTA */}
+      {/* FAQ */}
       <section className="py-20 px-4 sm:px-6 relative">
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="max-w-2xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Ready to create viral content?
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+              Frequently Asked Questions
             </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Join thousands of creators using AI to level up their content.
-            </p>
-            <Link href="/onboarding">
-              <Button size="lg" className="rounded-full px-8 py-6 text-lg font-semibold">
-                Start Free Analysis
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
           </motion.div>
+
+          <div className="space-y-4">
+            {[
+              {
+                question: "What counts as one analysis?",
+                answer: "Each video you upload and analyze counts as one analysis. You can re-view past analyses without using additional credits.",
+              },
+              {
+                question: "Can I cancel anytime?",
+                answer: "Yes! You can cancel your subscription at any time. You'll keep access until the end of your billing period.",
+              },
+              {
+                question: "What video formats are supported?",
+                answer: "We support MP4, MOV, AVI, and WebM formats up to 256MB. This covers most videos from TikTok, Instagram, and YouTube.",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.question}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+              >
+                <h3 className="font-semibold text-gray-900 mb-2">{item.question}</h3>
+                <p className="text-gray-600">{item.answer}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      {/* CTA - Yellow Section */}
+      <section
+        className="py-20 px-4 sm:px-6 relative"
+        style={{
+          backgroundColor: 'rgb(255,241,0)',
+          backgroundImage: 'linear-gradient(90deg, rgba(0, 0, 0, .12) 1px, transparent 0), linear-gradient(180deg, rgba(0, 0, 0, .12) 1px, transparent 0)',
+          backgroundSize: '33.5vw 33.5vw',
+          backgroundPosition: '50%',
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-3xl mx-auto text-center"
+        >
+          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+            Ready to create viral content?
+          </h2>
+          <p className="text-xl text-gray-700 mb-8">
+            Join thousands of creators using AI to level up their content.
+          </p>
+          <Link href="/onboarding">
+            <Button size="lg" className="rounded-full px-8 py-6 text-lg font-semibold bg-gray-900 hover:bg-gray-800">
+              Start Free Analysis
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+        </motion.div>
       </section>
 
       {/* Footer */}
