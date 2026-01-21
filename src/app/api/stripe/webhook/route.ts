@@ -58,8 +58,9 @@ export async function POST(request: Request) {
 
             console.log("Determined tier:", tier);
 
-            // Access current_period_end directly from subscription object
-            const periodEnd = subscription.current_period_end;
+            // Access current_period_end from subscription object
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const periodEnd = (subscription as any).current_period_end as number | undefined;
             console.log("Period end timestamp:", periodEnd);
 
             console.log("Updating user in database...");
@@ -129,7 +130,8 @@ export async function POST(request: Request) {
               ? "UNLIMITED"
               : "FREE";
 
-          const periodEnd = subscription.current_period_end;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const periodEnd = (subscription as any).current_period_end as number | undefined;
 
           await db.user.update({
             where: { id: userId },
