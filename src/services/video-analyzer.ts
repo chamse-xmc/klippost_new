@@ -217,7 +217,9 @@ Provide your analysis in the following JSON format only, no other text:
   "brandValue": <50-500, estimated brand deal value in dollars>` : ""}
 }
 
-Provide 4-6 actionable suggestions prioritized by impact. Be specific with timestamps where applicable.`;
+Provide 4-6 actionable suggestions prioritized by impact. Be specific with timestamps where applicable.
+
+IMPORTANT: Do NOT use any emojis in your response. Keep all text plain and professional.`;
 }
 
 function parseResult(text: string): AnalysisResult {
