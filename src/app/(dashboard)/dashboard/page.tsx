@@ -1174,25 +1174,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Suggestions */}
-          {analysisResult.analysis.suggestions && analysisResult.analysis.suggestions.length > 0 && (
-            <div className="rounded-2xl bg-card border border-border overflow-hidden">
-              <div className="p-4 border-b border-border">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggestions</h4>
-              </div>
-              <div className="p-4 space-y-2">
-                {analysisResult.analysis.suggestions.map((s, i) => (
-                  <div key={s.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted">
-                    <span className="w-6 h-6 rounded-lg bg-foreground text-background flex items-center justify-center text-xs font-bold shrink-0">
-                      {i + 1}
-                    </span>
-                    <span className="text-sm text-foreground">{s.suggestion || s.description}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Retention */}
           {analysisResult.analysis.retentionScore != null && (
             <div className="rounded-2xl bg-card border border-border overflow-hidden">
@@ -1305,6 +1286,25 @@ export default function DashboardPage() {
                   ${analysisResult.analysis.brandValue}
                 </span>
                 <span className="text-xs sm:text-sm text-muted-foreground">per sponsored post</span>
+              </div>
+            </div>
+          )}
+
+          {/* Suggestions */}
+          {analysisResult.analysis.suggestions && analysisResult.analysis.suggestions.length > 0 && (
+            <div className="rounded-2xl bg-card border border-border overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggestions</h4>
+              </div>
+              <div className="p-4 space-y-2">
+                {analysisResult.analysis.suggestions.map((s, i) => (
+                  <div key={s.id} className="flex items-start gap-3 p-3 rounded-xl bg-muted">
+                    <span className="w-6 h-6 rounded-lg bg-foreground text-background flex items-center justify-center text-xs font-bold shrink-0">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm text-foreground">{s.suggestion || s.description}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
