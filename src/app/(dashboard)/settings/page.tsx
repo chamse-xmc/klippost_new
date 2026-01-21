@@ -8,6 +8,53 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { FollowerRange, Goal, Challenge } from "@prisma/client";
 
+// Confetti piece component
+function ConfettiPiece({ index }: { index: number }) {
+  const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#1dd1a1'];
+  const color = colors[index % colors.length];
+
+  const config = useState(() => ({
+    left: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    duration: 2.5 + Math.random() * 1.5,
+    size: 8 + Math.random() * 10,
+    rotation: Math.random() * 360,
+  }))[0];
+
+  return (
+    <div
+      className="absolute animate-confetti-fall"
+      style={{
+        left: `${config.left}%`,
+        top: '-20px',
+        animationDelay: `${config.delay}s`,
+        animationDuration: `${config.duration}s`,
+      }}
+    >
+      <div
+        style={{
+          width: config.size,
+          height: config.size * 0.4,
+          backgroundColor: color,
+          borderRadius: 2,
+          transform: `rotate(${config.rotation}deg)`,
+        }}
+      />
+    </div>
+  );
+}
+
+function ConfettiCelebration({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {[...Array(100)].map((_, i) => (
+        <ConfettiPiece key={i} index={i} />
+      ))}
+    </div>
+  );
+}
+
 interface Review {
   id: string;
   content: string;
@@ -61,7 +108,13 @@ const DELETE_REASONS = [
 ];
 
 // Component that handles search params (needs Suspense boundary)
-function UpgradeHandler({ onUpgrade }: { onUpgrade: (plan: "PRO" | "UNLIMITED") => void }) {
+function UpgradeHandler({
+  onUpgrade,
+  onUpgradeSuccess
+}: {
+  onUpgrade: (plan: "PRO" | "UNLIMITED") => void;
+  onUpgradeSuccess: () => void;
+}) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -71,7 +124,15 @@ function UpgradeHandler({ onUpgrade }: { onUpgrade: (plan: "PRO" | "UNLIMITED") 
     } else if (upgradePlan === "unlimited") {
       onUpgrade("UNLIMITED");
     }
-  }, [searchParams, onUpgrade]);
+
+    // Check for successful upgrade return from Stripe
+    const upgraded = searchParams.get("upgraded");
+    if (upgraded === "true") {
+      // Clear the URL param
+      window.history.replaceState({}, "", "/settings");
+      onUpgradeSuccess();
+    }
+  }, [searchParams, onUpgrade, onUpgradeSuccess]);
 
   return null;
 }
@@ -87,6 +148,13 @@ export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+  // Celebration state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
   // Referral state
   const [isCreatingReferral, setIsCreatingReferral] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -96,6 +164,43 @@ export default function SettingsPage() {
     setOrigin(window.location.origin);
   }, []);
 
+  // Handle successful upgrade
+  const handleUpgradeSuccess = useCallback(() => {
+    setShowCelebration(true);
+    setShowUpgradeModal(true);
+    queryClient.invalidateQueries({ queryKey: ["user"] });
+    setTimeout(() => setShowCelebration(false), 4000);
+  }, [queryClient]);
+
+  // Submit review for bonus analyses
+  const handleSubmitReview = async () => {
+    if (reviewContent.length < 100) {
+      toast.error("Review must be at least 100 characters");
+      return;
+    }
+    setIsSubmittingReview(true);
+    try {
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: reviewContent, rating: reviewRating }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to submit review");
+      }
+      const data = await res.json();
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      setShowUpgradeModal(false);
+      setReviewContent("");
+      toast.success(`Thanks! +${data.bonusAmount} free analyses added!`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to submit review");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   // Stripe checkout handler
   const handleUpgrade = useCallback(async (plan: "PRO" | "UNLIMITED") => {
     setIsCheckingOut(true);
@@ -103,7 +208,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, returnUrl: "/settings?upgraded=true" }),
       });
       if (!res.ok) {
         const error = await res.json();
@@ -193,9 +298,12 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
+      {/* Confetti celebration */}
+      <ConfettiCelebration show={showCelebration} />
+
       {/* Handle upgrade URL params */}
       <Suspense fallback={null}>
-        <UpgradeHandler onUpgrade={handleUpgrade} />
+        <UpgradeHandler onUpgrade={handleUpgrade} onUpgradeSuccess={handleUpgradeSuccess} />
       </Suspense>
 
       {/* Header */}
@@ -560,6 +668,101 @@ export default function SettingsPage() {
                 {isDeleting ? "Deleting..." : "Delete Account"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Celebration Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowUpgradeModal(false)}
+          />
+          <div className="relative bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-5 animate-slide-up">
+            {/* Header with celebration */}
+            <div className="text-center">
+              <div className="text-5xl mb-3">🎉</div>
+              <h3 className="text-2xl font-bold text-foreground">
+                Welcome to {user?.subscription === "UNLIMITED" ? "Unlimited" : "Pro"}!
+              </h3>
+              <p className="text-muted-foreground mt-2">
+                Your account has been upgraded. Time to make viral content!
+              </p>
+            </div>
+
+            {/* Review for bonus - only show if user hasn't reviewed */}
+            {!user?.review && (
+              <div className="border-t border-border pt-5 space-y-4">
+                <div className="text-center">
+                  <p className="font-semibold text-foreground">Want 5 extra analyses?</p>
+                  <p className="text-sm text-muted-foreground">
+                    Write a quick review and get 5 bonus video analyses!
+                  </p>
+                </div>
+
+                {/* Star Rating */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rating</label>
+                  <div className="flex justify-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => setReviewRating(star)}
+                        className="p-1 transition-transform hover:scale-110"
+                      >
+                        <svg
+                          className={`w-8 h-8 ${star <= reviewRating ? "text-yellow-400" : "text-muted"}`}
+                          fill={star <= reviewRating ? "currentColor" : "none"}
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.5}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                        </svg>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Review Text */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Your Review
+                  </label>
+                  <textarea
+                    value={reviewContent}
+                    onChange={(e) => setReviewContent(e.target.value)}
+                    placeholder="What do you think of klippost? How has it helped your content?"
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl bg-muted border-0 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                  />
+                  <div className="flex justify-between text-xs">
+                    <span className={reviewContent.length >= 100 ? "text-green-500" : "text-muted-foreground"}>
+                      {reviewContent.length}/100 characters
+                    </span>
+                    {reviewContent.length >= 100 && (
+                      <span className="text-amber-500 font-medium">+5 free analyses!</span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  disabled={reviewContent.length < 100 || isSubmittingReview}
+                  onClick={handleSubmitReview}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmittingReview ? "Submitting..." : "Submit & Get 5 Free"}
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all"
+            >
+              {user?.review ? "Start Creating!" : "Maybe Later"}
+            </button>
           </div>
         </div>
       )}

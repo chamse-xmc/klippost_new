@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { plan } = body as { plan: "PRO" | "UNLIMITED" };
+    const { plan, returnUrl } = body as { plan: "PRO" | "UNLIMITED"; returnUrl?: string };
 
     if (!plan || !PLANS[plan]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
@@ -24,12 +24,16 @@ export async function POST(request: Request) {
 
     const baseUrl = getBaseUrl();
 
+    // Use custom returnUrl if provided (must start with /), otherwise default to /app
+    const successPath = returnUrl && returnUrl.startsWith("/") ? returnUrl : "/app?upgraded=true";
+    const cancelPath = returnUrl && returnUrl.startsWith("/") ? returnUrl.split("?")[0] + "?canceled=true" : "/app?canceled=true";
+
     const checkoutSession = await createCheckoutSession(
       session.user.id,
       session.user.email,
       PLANS[plan].priceId,
-      `${baseUrl}/app?upgraded=true`,
-      `${baseUrl}/app?canceled=true`
+      `${baseUrl}${successPath}`,
+      `${baseUrl}${cancelPath}`
     );
 
     return NextResponse.json({ url: checkoutSession.url });
