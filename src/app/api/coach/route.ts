@@ -67,7 +67,7 @@ Your role:
 If they ask about something not related to their video content or performance, politely redirect them back to video coaching topics.`;
 
     // Build conversation for Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
     const chat = model.startChat({
       history: [
