@@ -2,18 +2,51 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
+interface UserData {
+  subscription: string;
+}
+
 export default function CoachPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch user subscription status
+  const { data: user, isLoading: isLoadingUser } = useQuery<UserData>({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const res = await fetch("/api/user");
+      if (!res.ok) throw new Error("Failed to fetch user");
+      return res.json();
+    },
+  });
+
+  const handleUpgrade = async (plan: "PRO" | "UNLIMITED") => {
+    setIsCheckingOut(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, returnUrl: "/coach" }),
+      });
+      if (!res.ok) throw new Error("Failed to start checkout");
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      setIsCheckingOut(false);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,6 +106,58 @@ export default function CoachPage() {
     "Why do my hooks score low?",
     "Give me tips for better endings",
   ];
+
+  // Show loading state
+  if (isLoadingUser) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Show upgrade prompt for free users
+  if (user?.subscription === "FREE") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)] text-center px-4">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+          <svg className="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-foreground mb-2">AI Coach</h1>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          Get personalized coaching based on your video performance. AI Coach analyzes your patterns and gives you specific advice to improve.
+        </p>
+        <div className="space-y-3 w-full max-w-xs">
+          <button
+            onClick={() => handleUpgrade("PRO")}
+            disabled={isCheckingOut}
+            className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isCheckingOut ? (
+              <>
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Upgrade to Pro — $9/mo"
+            )}
+          </button>
+          <button
+            onClick={() => handleUpgrade("UNLIMITED")}
+            disabled={isCheckingOut}
+            className="w-full py-3 px-4 rounded-xl bg-muted text-foreground font-semibold hover:bg-muted/80 transition-all disabled:opacity-50"
+          >
+            Go Unlimited — $29/mo
+          </button>
+        </div>
+        <Link href="/app" className="mt-6 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          Back to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-7rem)] sm:h-[calc(100vh-8rem)]">

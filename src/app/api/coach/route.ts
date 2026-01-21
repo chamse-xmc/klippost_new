@@ -13,6 +13,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check subscription - AI Coach is Pro/Unlimited only
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { subscription: true, goals: true },
+    });
+
+    if (!user || user.subscription === "FREE") {
+      return NextResponse.json(
+        { error: "AI Coach is available for Pro and Unlimited subscribers only" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { message, conversationHistory = [] } = body as {
       message: string;
