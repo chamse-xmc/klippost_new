@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 
 const steps = [
   { path: "/onboarding", label: "1" },
@@ -18,18 +18,24 @@ export default function OnboardingLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const currentStep = steps.findIndex((s) => s.path === pathname) + 1 || 1;
 
-  // Redirect logged-in users to dashboard
+  // Redirect logged-in users to dashboard (only if they have a valid user ID)
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/app");
+      if (session?.user?.id) {
+        // Valid session - redirect to dashboard
+        router.replace("/app");
+      } else {
+        // Corrupted session - sign out
+        signOut({ redirect: false });
+      }
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
-  // Show loading while checking auth
-  if (status === "loading" || status === "authenticated") {
+  // Show loading while checking auth, or if authenticated with valid user (redirecting)
+  if (status === "loading" || (status === "authenticated" && session?.user?.id)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn, signOut, useSession } from "next-auth/react";
 import { useOnboardingStore } from "@/lib/onboarding-store";
 import { calculatePotential } from "@/services/potential-calculator";
 
@@ -22,12 +22,17 @@ export default function OnboardingPotentialPage() {
   }, [followerRange, goals, challenges]);
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      // Only save if we have onboarding data
+    // Check for valid session with actual user ID
+    if (status === "authenticated") {
+      if (!session?.user?.id) {
+        // Corrupted session - sign out
+        signOut({ redirect: false });
+        return;
+      }
+      // Valid session - save onboarding data or go to dashboard
       if (followerRange && goals.length > 0 && challenges.length > 0) {
         saveOnboardingData();
       } else {
-        // No onboarding data, just go to dashboard
         router.push("/app");
       }
     }
@@ -79,9 +84,8 @@ export default function OnboardingPotentialPage() {
     router.push("/onboarding/challenges");
   };
 
-  // If already authenticated, go to dashboard
-  if (status === "authenticated") {
-    // Only save onboarding data if we have it
+  // If already authenticated with valid user, show loading (useEffect handles redirect)
+  if (status === "authenticated" && session?.user?.id) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="w-10 h-10 border-3 border-primary border-t-transparent rounded-full animate-spin" />
