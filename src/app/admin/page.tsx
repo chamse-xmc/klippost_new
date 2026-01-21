@@ -31,6 +31,27 @@ interface Stats {
     path: string;
     views: number;
   }[];
+  topCountries: {
+    country: string;
+    views: number;
+  }[];
+  recentVisitors: {
+    id: string;
+    path: string;
+    country: string | null;
+    city: string | null;
+    createdAt: string;
+  }[];
+}
+
+// Country code to flag emoji
+function countryToFlag(countryCode: string): string {
+  if (!countryCode || countryCode.length !== 2) return "🌍";
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
 }
 
 export default function AdminPage() {
@@ -249,22 +270,83 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Top Pages */}
-            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <h2 className="text-lg font-semibold mb-4">Top Pages (24h)</h2>
-              <div className="space-y-2">
-                {stats.topPages.map((page, i) => (
-                  <div key={page.path} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5">
-                    <div className="flex items-center gap-3">
-                      <span className="text-gray-500 text-sm w-6">{i + 1}.</span>
-                      <span className="font-mono text-sm">{page.path}</span>
+            {/* Top Pages & Countries */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Top Pages */}
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                <h2 className="text-lg font-semibold mb-4">Top Pages (24h)</h2>
+                <div className="space-y-2">
+                  {stats.topPages.map((page, i) => (
+                    <div key={page.path} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5">
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-500 text-sm w-6">{i + 1}.</span>
+                        <span className="font-mono text-sm">{page.path}</span>
+                      </div>
+                      <span className="text-gray-400">{page.views}</span>
                     </div>
-                    <span className="text-gray-400">{page.views}</span>
-                  </div>
-                ))}
-                {stats.topPages.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">No page views yet</p>
-                )}
+                  ))}
+                  {stats.topPages.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-4">No page views yet</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Top Countries */}
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                <h2 className="text-lg font-semibold mb-4">Top Countries (24h)</h2>
+                <div className="space-y-2">
+                  {stats.topCountries.map((country, i) => (
+                    <div key={country.country} className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5">
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-500 text-sm w-6">{i + 1}.</span>
+                        <span className="text-lg">{countryToFlag(country.country)}</span>
+                        <span className="text-sm">{country.country}</span>
+                      </div>
+                      <span className="text-gray-400">{country.views}</span>
+                    </div>
+                  ))}
+                  {stats.topCountries.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-4">No location data yet</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Visitors */}
+            <div className="rounded-2xl bg-white/5 border border-white/10 overflow-hidden">
+              <div className="p-5 border-b border-white/10">
+                <h2 className="text-lg font-semibold">Recent Visitors</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 text-left text-gray-400">
+                      <th className="px-5 py-3 font-medium">Location</th>
+                      <th className="px-5 py-3 font-medium">Page</th>
+                      <th className="px-5 py-3 font-medium">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {stats.recentVisitors.map((visitor) => (
+                      <tr key={visitor.id} className="hover:bg-white/5">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{countryToFlag(visitor.country || "")}</span>
+                            <span>
+                              {visitor.city && visitor.country
+                                ? `${visitor.city}, ${visitor.country}`
+                                : visitor.country || "Unknown"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 font-mono text-gray-400">{visitor.path}</td>
+                        <td className="px-5 py-3 text-gray-400">
+                          {new Date(visitor.createdAt).toLocaleTimeString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 

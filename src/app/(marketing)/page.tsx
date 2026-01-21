@@ -1339,26 +1339,26 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 border-t border-gray-200 bg-white relative">
+      <footer className="py-8 px-4 sm:px-6 bg-gray-900 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-600">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-                <svg className="w-3 h-3 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
+              <div className="w-6 h-6 rounded-md bg-white flex items-center justify-center">
+                <svg className="w-3 h-3 text-gray-900" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M8 5.14v14l11-7-11-7z" />
                 </svg>
               </div>
-              <span className="font-bold text-gray-900">klippost</span>
+              <span className="font-bold text-white">klippost</span>
             </div>
             <p>&copy; {new Date().getFullYear()} klippost. All rights reserved.</p>
             <div className="flex gap-6">
-              <Link href="/pricing" className="hover:text-gray-900 transition-colors">
+              <Link href="/pricing" className="hover:text-white transition-colors">
                 Pricing
               </Link>
-              <Link href="/terms" className="hover:text-gray-900 transition-colors">
+              <Link href="/terms" className="hover:text-white transition-colors">
                 Terms
               </Link>
-              <Link href="/privacy" className="hover:text-gray-900 transition-colors">
+              <Link href="/privacy" className="hover:text-white transition-colors">
                 Privacy
               </Link>
             </div>

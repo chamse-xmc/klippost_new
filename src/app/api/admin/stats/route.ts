@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
       subscriptionBreakdown,
       recentUsers,
       topPages24h,
+      topCountries24h,
+      recentVisitors,
     ] = await Promise.all([
       // Page views last hour
       db.pageView.count({
@@ -82,6 +84,29 @@ export async function POST(req: NextRequest) {
         orderBy: { _count: { path: "desc" } },
         take: 10,
       }),
+      // Top countries last 24 hours
+      db.pageView.groupBy({
+        by: ["country"],
+        where: {
+          createdAt: { gte: twentyFourHoursAgo },
+          country: { not: null },
+        },
+        _count: { country: true },
+        orderBy: { _count: { country: "desc" } },
+        take: 10,
+      }),
+      // Recent visitors with location
+      db.pageView.findMany({
+        take: 20,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          path: true,
+          country: true,
+          city: true,
+          createdAt: true,
+        },
+      }),
     ]);
 
     // Format subscription breakdown
@@ -111,6 +136,17 @@ export async function POST(req: NextRequest) {
       topPages: topPages24h.map((p) => ({
         path: p.path,
         views: p._count.path,
+      })),
+      topCountries: topCountries24h.map((c) => ({
+        country: c.country,
+        views: c._count.country,
+      })),
+      recentVisitors: recentVisitors.map((v) => ({
+        id: v.id,
+        path: v.path,
+        country: v.country,
+        city: v.city,
+        createdAt: v.createdAt,
       })),
     });
   } catch (error) {

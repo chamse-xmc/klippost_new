@@ -370,8 +370,14 @@ model PageView {
   ip        String?
   referrer  String?  @db.Text
   userId    String?  // Optional - logged in user
+
+  // Location (from IP geolocation)
+  country   String?  // e.g., "US", "GB"
+  city      String?  // e.g., "New York", "London"
+
   createdAt DateTime @default(now())
 
   @@index([createdAt])
   @@index([path])
+  @@index([country])
 }
