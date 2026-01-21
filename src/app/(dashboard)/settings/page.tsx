@@ -155,6 +155,11 @@ export default function SettingsPage() {
   const [reviewRating, setReviewRating] = useState(5);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
+  // Yearly upsell modal state
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [selectedPlanType, setSelectedPlanType] = useState<"PRO" | "UNLIMITED" | null>(null);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
+
   // Referral state
   const [isCreatingReferral, setIsCreatingReferral] = useState(false);
   const [origin, setOrigin] = useState("");
@@ -254,8 +259,15 @@ export default function SettingsPage() {
     }
   };
 
+  // Show plan selection modal
+  const handleShowPlanModal = useCallback((planType: "PRO" | "UNLIMITED") => {
+    setSelectedPlanType(planType);
+    setBillingCycle("monthly");
+    setShowPlanModal(true);
+  }, []);
+
   // Stripe checkout handler
-  const handleUpgrade = useCallback(async (plan: "PRO" | "UNLIMITED") => {
+  const handleUpgrade = useCallback(async (plan: "PRO" | "UNLIMITED" | "PRO_YEARLY" | "UNLIMITED_YEARLY") => {
     setIsCheckingOut(true);
     try {
       const res = await fetch("/api/stripe/checkout", {
@@ -277,6 +289,14 @@ export default function SettingsPage() {
       setIsCheckingOut(false);
     }
   }, []);
+
+  // Proceed with selected plan from modal
+  const handleProceedWithPlan = () => {
+    if (!selectedPlanType) return;
+    const plan = billingCycle === "yearly" ? `${selectedPlanType}_YEARLY` as const : selectedPlanType;
+    setShowPlanModal(false);
+    handleUpgrade(plan);
+  };
 
   const { data: user, isLoading } = useQuery<UserData>({
     queryKey: ["user"],
@@ -464,7 +484,7 @@ export default function SettingsPage() {
         {user?.subscription === "FREE" && (
           <div className="px-5 pb-5 space-y-2">
             <button
-              onClick={() => handleUpgrade("PRO")}
+              onClick={() => handleShowPlanModal("PRO")}
               disabled={isCheckingOut}
               className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
@@ -474,22 +494,22 @@ export default function SettingsPage() {
                   <span>Loading...</span>
                 </>
               ) : (
-                "Upgrade to Pro — $9/mo"
+                "Upgrade to Pro"
               )}
             </button>
             <button
-              onClick={() => handleUpgrade("UNLIMITED")}
+              onClick={() => handleShowPlanModal("UNLIMITED")}
               disabled={isCheckingOut}
               className="w-full py-3 px-4 rounded-xl bg-muted text-foreground text-sm font-semibold hover:bg-muted/80 transition-all disabled:opacity-50"
             >
-              Go Unlimited — $29/mo
+              Go Unlimited
             </button>
           </div>
         )}
         {user?.subscription === "PRO" && (
           <div className="px-5 pb-5">
             <button
-              onClick={() => handleUpgrade("UNLIMITED")}
+              onClick={() => handleShowPlanModal("UNLIMITED")}
               disabled={isCheckingOut}
               className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
@@ -499,7 +519,7 @@ export default function SettingsPage() {
                   <span>Loading...</span>
                 </>
               ) : (
-                "Upgrade to Unlimited — $29/mo"
+                "Upgrade to Unlimited"
               )}
             </button>
           </div>
@@ -915,6 +935,125 @@ export default function SettingsPage() {
               className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all"
             >
               {user?.review ? "Start Creating!" : "Maybe Later"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Plan Selection Modal with Yearly Upsell */}
+      {showPlanModal && selectedPlanType && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowPlanModal(false)}
+          />
+          <div className="relative bg-card rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-5 animate-slide-up">
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-foreground">
+                {selectedPlanType === "PRO" ? "Pro Plan" : "Unlimited Plan"}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Choose your billing cycle
+              </p>
+            </div>
+
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-3 p-1 bg-muted rounded-xl">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={cn(
+                  "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all",
+                  billingCycle === "monthly"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle("yearly")}
+                className={cn(
+                  "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all relative",
+                  billingCycle === "yearly"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Yearly
+                <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full">
+                  -17%
+                </span>
+              </button>
+            </div>
+
+            {/* Price Display */}
+            <div className="text-center py-4">
+              {billingCycle === "monthly" ? (
+                <>
+                  <div className="text-4xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    ${selectedPlanType === "PRO" ? "9" : "29"}
+                    <span className="text-lg font-medium text-muted-foreground">/mo</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-4xl font-black text-foreground" style={{ fontFamily: "var(--font-nunito)" }}>
+                    ${selectedPlanType === "PRO" ? "90" : "290"}
+                    <span className="text-lg font-medium text-muted-foreground">/yr</span>
+                  </div>
+                  <div className="mt-1 text-sm text-green-500 font-medium">
+                    Save ${selectedPlanType === "PRO" ? "18" : "58"} per year!
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    (${selectedPlanType === "PRO" ? "7.50" : "24.17"}/mo equivalent)
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Features */}
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center gap-2 text-foreground">
+                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                {selectedPlanType === "PRO" ? "30 analyses/month" : "Unlimited analyses"}
+              </div>
+              <div className="flex items-center gap-2 text-foreground">
+                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                AI Coach access
+              </div>
+              <div className="flex items-center gap-2 text-foreground">
+                <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Goal-based insights
+              </div>
+            </div>
+
+            {/* CTA */}
+            <button
+              onClick={handleProceedWithPlan}
+              disabled={isCheckingOut}
+              className="w-full py-3 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isCheckingOut ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                `Continue with ${billingCycle === "yearly" ? "Yearly" : "Monthly"}`
+              )}
+            </button>
+
+            <button
+              onClick={() => setShowPlanModal(false)}
+              className="w-full py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
             </button>
           </div>
         </div>

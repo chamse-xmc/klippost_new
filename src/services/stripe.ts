@@ -17,6 +17,18 @@ export const PLANS = {
     price: 29,
     analyses: Infinity,
   },
+  PRO_YEARLY: {
+    name: "Pro (Yearly)",
+    priceId: process.env.STRIPE_PRICE_PRO_YEARLY!,
+    price: 90, // $7.50/mo equivalent, saves $18
+    analyses: 30,
+  },
+  UNLIMITED_YEARLY: {
+    name: "Unlimited (Yearly)",
+    priceId: process.env.STRIPE_PRICE_UNLIMITED_YEARLY!,
+    price: 290, // $24.17/mo equivalent, saves $58
+    analyses: Infinity,
+  },
 } as const;
 
 export async function createCheckoutSession(

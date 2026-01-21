@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { plan, returnUrl } = body as { plan: "PRO" | "UNLIMITED"; returnUrl?: string };
+    const { plan, returnUrl } = body as { plan: "PRO" | "UNLIMITED" | "PRO_YEARLY" | "UNLIMITED_YEARLY"; returnUrl?: string };
 
     if (!plan || !PLANS[plan]) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
