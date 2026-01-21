@@ -159,6 +159,13 @@ export default function SettingsPage() {
   const [isCreatingReferral, setIsCreatingReferral] = useState(false);
   const [origin, setOrigin] = useState("");
 
+  // Creator profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editFollowerRange, setEditFollowerRange] = useState<FollowerRange | null>(null);
+  const [editGoals, setEditGoals] = useState<Goal[]>([]);
+  const [editChallenges, setEditChallenges] = useState<Challenge[]>([]);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
   // Set origin on client
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -171,6 +178,52 @@ export default function SettingsPage() {
     queryClient.invalidateQueries({ queryKey: ["user"] });
     setTimeout(() => setShowCelebration(false), 4000);
   }, [queryClient]);
+
+  // Start editing profile
+  const handleStartEditProfile = () => {
+    setEditFollowerRange(user?.followerRange || null);
+    setEditGoals(user?.goals || []);
+    setEditChallenges(user?.challenges || []);
+    setIsEditingProfile(true);
+  };
+
+  // Save profile changes
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    try {
+      const res = await fetch("/api/user", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          followerRange: editFollowerRange,
+          goals: editGoals,
+          challenges: editChallenges,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update profile");
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      setIsEditingProfile(false);
+      toast.success("Profile updated");
+    } catch (error) {
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  // Toggle goal selection
+  const toggleGoal = (goal: Goal) => {
+    setEditGoals((prev) =>
+      prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]
+    );
+  };
+
+  // Toggle challenge selection
+  const toggleChallenge = (challenge: Challenge) => {
+    setEditChallenges((prev) =>
+      prev.includes(challenge) ? prev.filter((c) => c !== challenge) : [...prev, challenge]
+    );
+  };
 
   // Submit review for bonus analyses
   const handleSubmitReview = async () => {
@@ -510,44 +563,140 @@ export default function SettingsPage() {
 
       {/* Creator Profile */}
       <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Creator Profile</p>
-
-        <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-muted-foreground">Followers</span>
-          <span className="text-sm font-medium text-foreground">
-            {user?.followerRange ? followerRangeLabels[user.followerRange] : "Not set"}
-          </span>
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Creator Profile</p>
+          {!isEditingProfile && (
+            <button
+              onClick={handleStartEditProfile}
+              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
+            >
+              Edit
+            </button>
+          )}
         </div>
 
-        <div className="border-t border-border pt-4">
-          <span className="text-sm text-muted-foreground block mb-2">Goals</span>
-          <div className="flex flex-wrap gap-2">
-            {user?.goals?.length ? (
-              user.goals.map((goal) => (
-                <span key={goal} className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
-                  {goalLabels[goal]}
-                </span>
-              ))
-            ) : (
-              <span className="text-sm text-muted-foreground">Not set</span>
-            )}
-          </div>
-        </div>
+        {isEditingProfile ? (
+          <>
+            {/* Follower Range */}
+            <div className="space-y-2">
+              <span className="text-sm text-muted-foreground">Followers</span>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(followerRangeLabels) as FollowerRange[]).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setEditFollowerRange(range)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                      editFollowerRange === range
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {followerRangeLabels[range]}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <div className="border-t border-border pt-4">
-          <span className="text-sm text-muted-foreground block mb-2">Challenges</span>
-          <div className="flex flex-wrap gap-2">
-            {user?.challenges?.length ? (
-              user.challenges.map((challenge) => (
-                <span key={challenge} className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
-                  {challengeLabels[challenge]}
-                </span>
-              ))
-            ) : (
-              <span className="text-sm text-muted-foreground">Not set</span>
-            )}
-          </div>
-        </div>
+            {/* Goals */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <span className="text-sm text-muted-foreground">Goals (select multiple)</span>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(goalLabels) as Goal[]).map((goal) => (
+                  <button
+                    key={goal}
+                    onClick={() => toggleGoal(goal)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                      editGoals.includes(goal)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {goalLabels[goal]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Challenges */}
+            <div className="border-t border-border pt-4 space-y-2">
+              <span className="text-sm text-muted-foreground">Challenges (select multiple)</span>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(challengeLabels) as Challenge[]).map((challenge) => (
+                  <button
+                    key={challenge}
+                    onClick={() => toggleChallenge(challenge)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                      editChallenges.includes(challenge)
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80"
+                    )}
+                  >
+                    {challengeLabels[challenge]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Save/Cancel buttons */}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all disabled:opacity-50"
+              >
+                {isSavingProfile ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                onClick={() => setIsEditingProfile(false)}
+                className="px-4 py-2.5 rounded-xl bg-muted text-muted-foreground text-sm font-medium hover:text-foreground transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-muted-foreground">Followers</span>
+              <span className="text-sm font-medium text-foreground">
+                {user?.followerRange ? followerRangeLabels[user.followerRange] : "Not set"}
+              </span>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <span className="text-sm text-muted-foreground block mb-2">Goals</span>
+              <div className="flex flex-wrap gap-2">
+                {user?.goals?.length ? (
+                  user.goals.map((goal) => (
+                    <span key={goal} className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
+                      {goalLabels[goal]}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">Not set</span>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <span className="text-sm text-muted-foreground block mb-2">Challenges</span>
+              <div className="flex flex-wrap gap-2">
+                {user?.challenges?.length ? (
+                  user.challenges.map((challenge) => (
+                    <span key={challenge} className="px-3 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground">
+                      {challengeLabels[challenge]}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">Not set</span>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Account Actions */}
@@ -739,7 +888,11 @@ export default function SettingsPage() {
                   />
                   <div className="flex justify-between text-xs">
                     <span className={reviewContent.length >= 100 ? "text-green-500" : "text-muted-foreground"}>
-                      {reviewContent.length}/100 characters
+                      {reviewContent.length >= 100 ? (
+                        <span className="text-green-500">Ready to submit!</span>
+                      ) : (
+                        <span>{100 - reviewContent.length} more characters needed</span>
+                      )}
                     </span>
                     {reviewContent.length >= 100 && (
                       <span className="text-amber-500 font-medium">+5 free analyses!</span>
