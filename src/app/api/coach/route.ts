@@ -53,11 +53,7 @@ export async function POST(request: Request) {
       take: 50, // Last 50 videos for context
     });
 
-    // Fetch user's goals
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { goals: true },
-    });
+    // user.goals already fetched above
 
     // Build context summary
     const context = buildContextSummary(videos, user?.goals || []);
