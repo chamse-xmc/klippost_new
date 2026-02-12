@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 
 export default function LoginPage() {
@@ -105,14 +106,14 @@ export default function LoginPage() {
     <div className="space-y-6">
       {/* Logo */}
       <div className="flex justify-center">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
             <svg className="w-4 h-4 text-primary-foreground" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5.14v14l11-7-11-7z" />
             </svg>
           </div>
           <span className="font-bold text-xl text-foreground tracking-tight">klippost</span>
-        </div>
+        </Link>
       </div>
 
       {/* Header */}
@@ -175,12 +176,12 @@ export default function LoginPage() {
             Continue with Google
           </button>
 
-          <button
-            onClick={() => router.push("/onboarding")}
-            className="w-full py-4 px-6 rounded-xl font-semibold border border-border text-foreground hover:bg-muted transition-all"
+          <Link
+            href="/onboarding"
+            className="block w-full py-4 px-6 rounded-xl font-semibold border border-border text-foreground hover:bg-muted transition-all text-center"
           >
             New here? Start onboarding
-          </button>
+          </Link>
         </div>
       )}
     </div>

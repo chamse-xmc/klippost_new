@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 
 const steps = [
@@ -59,6 +60,15 @@ export default function OnboardingLayout({
       <div className="flex min-h-screen flex-col items-center justify-center px-4 py-16">
         <div className="w-full max-w-md">
           {children}
+
+          {/* Crawlable links for SEO */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <span className="mx-2">·</span>
+            <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
+            <span className="mx-2">·</span>
+            <Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link>
+          </div>
         </div>
       </div>
 
